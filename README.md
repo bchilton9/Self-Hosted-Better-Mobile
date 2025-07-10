@@ -1,1 +1,66 @@
-Work in progress 
+# 📱 Self-Hosted Better Mobile
+
+A lightweight customization project that improves mobile usability across self-hosted apps.
+
+This project enhances user interfaces that are clunky or difficult on small screens. By injecting a single JavaScript file, it transforms mobile layouts into clean, tap-friendly experiences. Works alongside **Theme Park** for styling, but focuses entirely on **functionality improvements**, not themes.
+
+## 📲 Features
+
+- Custom mobile launcher for Organizr (like iOS app icons)
+- Full-screen card with collapsible categories and touch-friendly buttons
+- Automatically pulls tab data from Organizr’s existing config
+- Hamburger toggle replaces the sidebar on mobile
+- Can be injected using a simple script tag — no install or rebuild needed
+
+## ✅ Supported Apps (So Far)
+
+| App       | Status        | Notes                                     |
+|————|—————|-——————————————|
+| Organizr  | ✅ Implemented | Mobile launcher, layout fixes              |
+| Sonarr    | 🚧 Planned     | Tab tweaks and layout injection            |
+| Radarr    | 🚧 Planned     | Tab tweaks and layout injection            |
+| Tautulli  | 🚧 Planned     | Mobile graph view adjustments              |
+| More...   | 🔜 Coming Soon | Add your requests in Issues or PRs        |
+
+## 🚀 How to Use with Organizr
+
+### 1. Add the JavaScript to Organizr
+
+In Organizr:
+- Go to **Settings** > **Customization** > **Custom JavaScript**
+- Paste the following:
+```html
+<script src=“https://moble.chilsoft.com/organizr/mobile.js”></script>
+```
+
+Save, then reload the page on a mobile device to see the new launcher.
+
+> 💡 Want to customize the look too? This works great with [Theme Park](https://theme-park.dev/) — just use their guide to apply a CSS theme. Our script won’t interfere.
+
+## ✨ Goals
+
+- Make mobile-first enhancements for self-hosted dashboards
+- Keep everything client-side (injected, not installed)
+- Make UI fixes that the original devs missed 😎
+
+## 👷 More Coming Soon
+We’re just getting started. New mobile features and app support will be rolled out regularly. This project is modular and built for expansion.
+
+## 📜 License
+
+MIT – free to use and modify. Not affiliated with Hubitat.
+
+## 🛠 Made By
+
+[ChilSoft.com](https://chilsoft.com) with caffeine and questionable commits.
+
+## ⚠️ Disclaimer
+
+This site and its contents are provided for informational and educational purposes only.
+
+Use any code, tools, or instructions at your own risk.  
+We are **not responsible** for any damage to your device, data loss, or unintended consequences.
+
+Always proceed with care — and make backups.
+
+© **2025 ChilSoft**. All rights reserved.
