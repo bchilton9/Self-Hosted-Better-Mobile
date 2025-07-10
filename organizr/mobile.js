@@ -1,68 +1,64 @@
-console.log("🎉 mobile.js loaded!");
+console.log("📱 mobile.js loaded!");
 
-if (window.innerWidth <= 768) {
+if (window.innerWidth < 768) {
   console.log("📱 Mobile view detected");
 
-  // Inject CSS
-  const css = document.createElement("link");
-  css.rel = "stylesheet";
-  css.href = "https://moble.chilsoft.com/organizr/mobile.css";
-  document.head.appendChild(css);
-
-  const launcherCSS = document.createElement("link");
-  launcherCSS.rel = "stylesheet";
-  launcherCSS.href = "https://moble.chilsoft.com/organizr/launcher.css";
-  document.head.appendChild(launcherCSS);
-
-  // Try to build the launcher once ready
-  function buildLauncher() {
-    const sidebar = document.querySelector(".side-menu");
-    if (!sidebar) {
-      console.warn("⚠️ Sidebar container still not found");
-      return false;
+  function waitForTabs(retries = 20) {
+    const tabLinks = document.querySelectorAll('a.waves-effect[onclick^="tabActions"]');
+    if (tabLinks.length === 0 && retries > 0) {
+      console.warn("⏳ Tabs not found, retrying...");
+      setTimeout(() => waitForTabs(retries - 1), 500);
+      return;
     }
 
-    const sidebarTabs = sidebar.querySelectorAll('a.waves-effect[href^="javascript:void(0)"]');
-    if (!sidebarTabs.length) {
-      console.warn("⚠️ Sidebar tabs not found yet");
-      return false;
+    if (tabLinks.length === 0) {
+      console.error("❌ Gave up waiting for tab links.");
+      return;
     }
 
-    console.log("✅ Sidebar and tabs found -- building launcher");
+    console.log("✅ Tabs found! Building custom launcher...");
+    createMobileLauncher(tabLinks);
+  }
 
+  function createMobileLauncher(links) {
     const launcher = document.createElement("div");
-    launcher.className = "mobile-launcher";
+    launcher.id = "custom-launcher";
+    launcher.style.position = "fixed";
+    launcher.style.bottom = "20px";
+    launcher.style.left = "20px";
+    launcher.style.zIndex = "9999";
+    launcher.style.background = "rgba(0,0,0,0.85)";
+    launcher.style.padding = "10px";
+    launcher.style.borderRadius = "8px";
+    launcher.style.maxHeight = "50vh";
+    launcher.style.overflowY = "auto";
+    launcher.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
+    launcher.style.color = "#fff";
 
-    sidebarTabs.forEach(tab => {
-      const onclick = tab.getAttribute("onclick");
-      const nameSpan = tab.querySelector(".sidebar-tabName");
-      const label = nameSpan ? nameSpan.textContent.trim() : "Unnamed";
-      const icon = tab.querySelector("img")?.src || "";
+    launcher.innerHTML = `<strong style="display:block;margin-bottom:6px;">Launcher</strong>`;
 
-      const btn = document.createElement("button");
-      btn.className = "mobile-launcher-button";
-      btn.innerHTML = icon ? `<img src="${icon}" class="launcher-icon"> ${label}` : label;
-      btn.onclick = () => tab.click();
-
-      launcher.appendChild(btn);
+    links.forEach(link => {
+      const name = link.querySelector("span")?.textContent?.trim();
+      if (name) {
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.style.display = "block";
+        btn.style.margin = "4px 0";
+        btn.style.width = "100%";
+        btn.style.padding = "6px";
+        btn.style.background = "#333";
+        btn.style.border = "1px solid #555";
+        btn.style.borderRadius = "4px";
+        btn.style.color = "#fff";
+        btn.style.textAlign = "left";
+        btn.style.fontSize = "14px";
+        btn.onclick = () => link.click();
+        launcher.appendChild(btn);
+      }
     });
 
     document.body.appendChild(launcher);
-    return true;
   }
 
-  // 🕵️ Try to find sidebar up to 20 times (once every 500ms)
-  let attempts = 0;
-  const maxAttempts = 20;
-  const pollInterval = setInterval(() => {
-    if (buildLauncher()) {
-      clearInterval(pollInterval);
-    } else {
-      attempts++;
-      if (attempts >= maxAttempts) {
-        clearInterval(pollInterval);
-        console.error("❌ Gave up waiting for sidebar after 10 seconds");
-      }
-    }
-  }, 500);
+  waitForTabs();
 }
