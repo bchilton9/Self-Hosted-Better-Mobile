@@ -1,41 +1,54 @@
-/* Apply only on mobile */
+/* === THEME.PARK BASE === */
+@import url("https://theme-park.dev/css/addons/organizr/glass/organizr-base-old.css");
+@import url("https://theme-park.dev/css/addons/organizr/glass/glass-base.css");
+
+/* === OPTIONAL OVERRIDES === */
+:root {
+  --mobile-bg-color: radial-gradient(circle, #2d2d2d, #141414);
+  --custom-buttons-color: linear-gradient(to right, #3F51B5, #009688);
+  --tp-text-primary: #fff;
+}
+
+/* === MOBILE UI GRID LAUNCHER SUPPORT (optional for custom tab) === */
 @media (max-width: 768px) {
-  /* Convert nav items into full-width buttons */
-  ul.nav-tabs > li {
-    display: block;
-    margin: 8px 0;
-  }
-  ul.nav-tabs > li > a {
-    display: block;
-    padding: 16px;
-    background: var(--tp-bg-primary);
-    color: var(--tp-text-primary) !important;
+  .mobile-launcher {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 20px;
+    padding: 20px;
     text-align: center;
-    border-radius: 8px;
-    font-size: 1rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: background 0.2s, transform 0.1s;
-  }
-  ul.nav-tabs > li > a:hover,
-  ul.nav-tabs > li > a.active {
-    background: var(--tp-bg-secondary);
-    transform: translateY(-1px);
   }
 
-  /* Keep collapsible categories clean and tappable */
-  .panel-title > a {
-    font-size: 1.1rem;
-    padding: 12px;
-    display: block;
-    color: var(--tp-text-secondary);
+  .mobile-launcher a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--tp-text-primary, #fff);
+    font-size: 14px;
+    border-radius: 16px;
+    padding: 14px;
+    background: var(--custom-buttons-color);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, background 0.2s;
   }
 
-  /* Hide desktop-only spacing/layout */
-  .nav-tabs {
-    border-bottom: none;
-    margin: 0;
+  .mobile-launcher a:hover {
+    transform: scale(1.05);
   }
-  .panel-group {
-    margin: 0;
+
+  .mobile-launcher img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+  }
+}
+
+/* === HIDE SIDEBAR ON MOBILE (optional) === */
+@media (max-width: 768px) {
+  #side-menu, .sidebar, .left-side {
+    display: none !important;
   }
 }
