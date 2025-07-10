@@ -1,131 +1,108 @@
-(function () {
-  console.log("📱 mobile.js loaded!");
-  if (!/Mobi|Android/i.test(navigator.userAgent)) return;
+console.log("📱 mobile.js loaded!");
 
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("📱 Mobile view detected");
+if (window.innerWidth < 768) {
+  console.log("📱 Mobile view detected");
 
-    const interval = setInterval(() => {
-      const tabs = document.querySelectorAll('a[onclick^="tabActions"]');
-      if (tabs.length > 0) {
-        clearInterval(interval);
-        console.log("✅ Tabs found! Building custom launcher...");
-        buildLauncher(Array.from(tabs));
-      }
-    }, 500);
+  function waitForTabs(retries = 20) {
+    const tabLinks = document.querySelectorAll('a.waves-effect[onclick^="tabActions"]');
+    if (tabLinks.length === 0 && retries > 0) {
+      console.warn("⏳ Tabs not found, retrying...");
+      setTimeout(() => waitForTabs(retries - 1), 500);
+      return;
+    }
 
-    function buildLauncher(tabLinks) {
-      // Remove original sidebar
-      const sidebar = document.querySelector(".sidebar") || document.querySelector("#side-menu") || document.querySelector("aside");
-      if (sidebar) sidebar.style.display = "none";
+    if (tabLinks.length === 0) {
+      console.error("❌ Gave up waiting for tab links.");
+      return;
+    }
 
-      // Build toggle button
-      const toggleBtn = document.createElement("div");
-      toggleBtn.innerHTML = "☰";
-      toggleBtn.id = "mobileLauncherToggle";
-      toggleBtn.style.position = "fixed";
-      toggleBtn.style.top = "10px";
-      toggleBtn.style.left = "10px";
-      toggleBtn.style.zIndex = "9999";
-      toggleBtn.style.fontSize = "24px";
-      toggleBtn.style.background = "#333";
-      toggleBtn.style.color = "#fff";
-      toggleBtn.style.padding = "8px 12px";
-      toggleBtn.style.borderRadius = "8px";
-      toggleBtn.style.boxShadow = "0 2px 5px rgba(0,0,0,0.5)";
-      toggleBtn.style.cursor = "pointer";
-      document.body.appendChild(toggleBtn);
+    console.log("✅ Tabs found! Building iOS-style launcher...");
+    createMobileLauncher(tabLinks);
+  }
 
-      // Build overlay launcher
-      const launcher = document.createElement("div");
-      launcher.id = "mobileLauncher";
-      launcher.style.position = "fixed";
-      launcher.style.top = "0";
-      launcher.style.left = "0";
-      launcher.style.width = "100%";
-      launcher.style.height = "100%";
-      launcher.style.background = "rgba(0,0,0,0.95)";
-      launcher.style.color = "#fff";
-      launcher.style.zIndex = "9998";
-      launcher.style.display = "none";
-      launcher.style.overflowY = "auto";
-      launcher.style.padding = "20px";
-      launcher.style.boxSizing = "border-box";
-      launcher.style.fontFamily = "sans-serif";
-      document.body.appendChild(launcher);
+  function createMobileLauncher(links) {
+    // Hide the original sidebar
+    const sidebar = document.querySelector("aside");
+    if (sidebar) sidebar.style.display = "none";
 
-      toggleBtn.onclick = () => {
-        launcher.style.display = launcher.style.display === "none" ? "block" : "none";
-      };
+    // Add toggle button
+    const toggleBtn = document.createElement("button");
+    toggleBtn.id = "launcher-toggle";
+    toggleBtn.innerHTML = "☰";
+    toggleBtn.style.position = "fixed";
+    toggleBtn.style.top = "10px";
+    toggleBtn.style.left = "10px";
+    toggleBtn.style.zIndex = "10000";
+    toggleBtn.style.padding = "8px 12px";
+    toggleBtn.style.fontSize = "18px";
+    toggleBtn.style.border = "none";
+    toggleBtn.style.borderRadius = "6px";
+    toggleBtn.style.background = "#333";
+    toggleBtn.style.color = "#fff";
+    toggleBtn.onclick = () => {
+      const launcher = document.getElementById("custom-launcher");
+      launcher.style.display = launcher.style.display === "flex" ? "none" : "flex";
+    };
+    document.body.appendChild(toggleBtn);
 
-      // Organize tabs by category
-      const categories = {};
-      tabLinks.forEach((link) => {
-        const tabName = link.textContent.trim();
-        const category = link.closest("ul")?.previousElementSibling?.textContent?.trim() || "Uncategorized";
-        if (!categories[category]) categories[category] = [];
-        categories[category].push(link);
-      });
+    // Create launcher overlay
+    const launcher = document.createElement("div");
+    launcher.id = "custom-launcher";
+    launcher.style.position = "fixed";
+    launcher.style.top = "0";
+    launcher.style.left = "0";
+    launcher.style.width = "100vw";
+    launcher.style.height = "100vh";
+    launcher.style.background = "rgba(0, 0, 0, 0.9)";
+    launcher.style.display = "flex";
+    launcher.style.flexWrap = "wrap";
+    launcher.style.justifyContent = "center";
+    launcher.style.alignItems = "flex-start";
+    launcher.style.padding = "60px 20px 20px 20px";
+    launcher.style.zIndex = "9999";
+    launcher.style.overflowY = "auto";
+    launcher.style.gap = "20px";
 
-      // Build categorized app icon grid
-      for (const [category, links] of Object.entries(categories)) {
-        const section = document.createElement("div");
-        section.style.marginBottom = "20px";
-
-        const header = document.createElement("h2");
-        header.textContent = category;
-        header.style.fontSize = "18px";
-        header.style.marginBottom = "10px";
-        header.style.cursor = "pointer";
-        header.style.userSelect = "none";
-        section.appendChild(header);
-
-        const grid = document.createElement("div");
-        grid.style.display = "grid";
-        grid.style.gridTemplateColumns = "repeat(3, 1fr)";
-        grid.style.gap = "15px";
-        grid.classList.add("launcher-grid");
-        section.appendChild(grid);
-
-        links.forEach((link) => {
-          const app = document.createElement("div");
-          app.style.textAlign = "center";
-          app.style.padding = "10px";
-          app.style.background = "#222";
-          app.style.borderRadius = "16px";
-          app.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3)";
-          app.style.transition = "transform 0.2s ease";
-          app.style.cursor = "pointer";
-          app.onclick = () => link.click();
-
-          const img = link.querySelector("img");
-          if (img) {
-            const icon = document.createElement("img");
-            icon.src = img.src;
-            icon.style.width = "40px";
-            icon.style.height = "40px";
-            icon.style.borderRadius = "10px";
-            icon.style.marginBottom = "6px";
-            app.appendChild(icon);
-          }
-
-          const label = document.createElement("div");
-          label.textContent = link.textContent.trim();
-          label.style.fontSize = "14px";
-          label.style.whiteSpace = "nowrap";
-          label.style.overflow = "hidden";
-          label.style.textOverflow = "ellipsis";
-          app.appendChild(label);
-
-          grid.appendChild(app);
-        });
-
-        header.onclick = () => {
-          grid.style.display = grid.style.display === "none" ? "grid" : "none";
+    links.forEach(link => {
+      const name = link.querySelector("span")?.textContent?.trim();
+      const iconSrc = link.querySelector("img")?.src;
+      if (name) {
+        const iconButton = document.createElement("div");
+        iconButton.className = "launcher-icon";
+        iconButton.style.display = "flex";
+        iconButton.style.flexDirection = "column";
+        iconButton.style.alignItems = "center";
+        iconButton.style.width = "70px";
+        iconButton.style.cursor = "pointer";
+        iconButton.onclick = () => {
+          launcher.style.display = "none";
+          link.click();
         };
 
-        launcher.appendChild(section);
+        const img = document.createElement("img");
+        img.src = iconSrc || "";
+        img.alt = name;
+        img.style.width = "50px";
+        img.style.height = "50px";
+        img.style.borderRadius = "12px";
+        img.style.objectFit = "cover";
+        img.style.marginBottom = "6px";
+        img.style.background = "#fff";
+
+        const label = document.createElement("span");
+        label.textContent = name;
+        label.style.color = "#fff";
+        label.style.fontSize = "12px";
+        label.style.textAlign = "center";
+
+        iconButton.appendChild(img);
+        iconButton.appendChild(label);
+        launcher.appendChild(iconButton);
       }
-    }
-  });
-})();
+    });
+
+    document.body.appendChild(launcher);
+  }
+
+  waitForTabs();
+}
