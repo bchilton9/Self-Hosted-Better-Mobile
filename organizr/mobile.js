@@ -18,6 +18,7 @@ if (window.innerWidth <= 768) {
 
   // Function to build the launcher
   function buildLauncherFromSidebar(tabs) {
+    if (document.querySelector(".mobile-launcher")) return;
     console.log("✅ Tabs found -- building launcher");
     const launcher = document.createElement("div");
     launcher.className = "mobile-launcher";
@@ -37,24 +38,27 @@ if (window.innerWidth <= 768) {
     document.body.appendChild(launcher);
   }
 
-  // Observe sidebar for tab injection
-  const waitForSidebar = setInterval(() => {
-    const sidebar = document.querySelector(".sidebar");
-    if (sidebar) {
-      clearInterval(waitForSidebar);
-      console.log("👀 Sidebar found, watching for tab links");
-
-      const observer = new MutationObserver(() => {
-        const tabs = document.querySelectorAll(".side-tab-link");
-        if (tabs.length > 0) {
-          observer.disconnect();
-          buildLauncherFromSidebar(tabs);
-        }
-      });
-
-      observer.observe(sidebar, { childList: true, subtree: true });
+  // Fallback: poll until tabs are found
+  const pollTabs = setInterval(() => {
+    const tabs = document.querySelectorAll(".side-tab-link");
+    if (tabs.length > 0) {
+      clearInterval(pollTabs);
+      console.log("✅ Tabs found by polling");
+      buildLauncherFromSidebar(tabs);
     } else {
-      console.log("⏳ Waiting for sidebar...");
+      console.log("⏳ Still waiting for tabs...");
     }
-  }, 300);
+  }, 500);
+
+  // Also observe whole document for robustness
+  const observer = new MutationObserver(() => {
+    const tabs = document.querySelectorAll(".side-tab-link");
+    if (tabs.length > 0) {
+      observer.disconnect();
+      console.log("✅ Tabs found by observer");
+      buildLauncherFromSidebar(tabs);
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 }
