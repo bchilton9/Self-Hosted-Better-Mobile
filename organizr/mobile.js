@@ -15,7 +15,7 @@ if (window.innerWidth <= 768) {
   launcherCSS.href = "https://moble.chilsoft.com/organizr/launcher.css";
   document.head.appendChild(launcherCSS);
 
-  // Build the launcher
+  // Launcher build function
   function buildLauncher() {
     const sidebarTabs = document.querySelectorAll('a.waves-effect[href^="javascript:void(0)"]');
     if (sidebarTabs.length === 0) {
@@ -44,20 +44,24 @@ if (window.innerWidth <= 768) {
     document.body.appendChild(launcher);
   }
 
-  // Observe DOM for sidebar injection
-  const observer = new MutationObserver(() => {
-    const tabs = document.querySelectorAll('a.waves-effect[href^="javascript:void(0)"]');
-    if (tabs.length > 0) {
-      observer.disconnect();
-      buildLauncher();
+  // Wait for sidebar to exist, then observe for tab links
+  const waitForSidebar = new MutationObserver(() => {
+    const sidebar = document.querySelector(".side-menu");
+    if (sidebar) {
+      console.log("👀 Sidebar found, watching for tab links");
+      waitForSidebar.disconnect();
+
+      const tabWatcher = new MutationObserver(() => {
+        const tabs = document.querySelectorAll('a.waves-effect[href^="javascript:void(0)"]');
+        if (tabs.length > 0) {
+          tabWatcher.disconnect();
+          buildLauncher();
+        }
+      });
+
+      tabWatcher.observe(sidebar, { childList: true, subtree: true });
     }
   });
 
-  const sidebar = document.querySelector(".side-menu");
-  if (sidebar) {
-    console.log("👀 Watching sidebar for tab injection");
-    observer.observe(sidebar, { childList: true, subtree: true });
-  } else {
-    console.warn("⚠️ Sidebar container not found.");
-  }
+  waitForSidebar.observe(document.body, { childList: true, subtree: true });
 }
