@@ -1,0 +1,46 @@
+/* Mobile tweaks for Organizr (doesn't change theme) */
+
+body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.slideout-overlay {
+  transition: opacity 0.3s ease;
+}
+
+/* Sidebar tap targets larger */
+.side-tab-link {
+  padding: 12px 16px;
+  font-size: 1rem;
+}
+
+/* Improve tab visibility and spacing */
+.sidebar .list-group-item {
+  margin: 4px 0;
+  border-radius: 8px;
+}
+
+/* Fix bottom spacing when keyboard hides on iOS */
+html, body {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+/* Optional: Hide overflow white box edge case */
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  height: 200px;
+  width: 100%;
+  background: var(--main-background, #000);
+  z-index: -1;
+}
+
+/* Fix launcher and dock icon sizes if added */
+.launcher-tab-icon,
+#dock .dock-icon {
+  width: 42px !important;
+  height: 42px !important;
+}
