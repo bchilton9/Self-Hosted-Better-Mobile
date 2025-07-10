@@ -1,64 +1,49 @@
 console.log("🎉 mobile.js loaded!");
 
-// Only run on mobile
+// Mobile enhancements for Organizr
 if (window.innerWidth <= 768) {
   console.log("📱 Mobile view detected");
 
-  // Inject mobile.css
+  // Inject mobile.css for layout fixes
   const css = document.createElement("link");
   css.rel = "stylesheet";
   css.href = "https://moble.chilsoft.com/organizr/mobile.css";
   document.head.appendChild(css);
 
-  // Inject launcher.css
+  // Inject launcher.css for launcher layout
   const launcherCSS = document.createElement("link");
   launcherCSS.rel = "stylesheet";
   launcherCSS.href = "https://moble.chilsoft.com/organizr/launcher.css";
   document.head.appendChild(launcherCSS);
 
-  // Function to build the launcher
-  function buildLauncherFromSidebar(tabs) {
-    if (document.querySelector(".mobile-launcher")) return;
-    console.log("✅ Tabs found -- building launcher");
-    const launcher = document.createElement("div");
-    launcher.className = "mobile-launcher";
+  // Delay launcher build until sidebar is ready
+  const interval = setInterval(() => {
+    const sidebarTabs = document.querySelectorAll('a.waves-effect[href^="javascript:void(0)"]');
 
-    tabs.forEach(tab => {
-      const href = tab.getAttribute("href");
-      const label = tab.querySelector(".name")?.textContent || "Tab";
-      const icon = tab.querySelector("i")?.outerHTML || "📄";
+    if (sidebarTabs.length > 0) {
+      console.log("✅ Sidebar tabs found, building launcher...");
+      clearInterval(interval);
 
-      const btn = document.createElement("a");
-      btn.href = href;
-      btn.className = "launcher-button";
-      btn.innerHTML = `<div class="icon">${icon}</div><div class="label">${label}</div>`;
-      launcher.appendChild(btn);
-    });
+      const launcher = document.createElement("div");
+      launcher.className = "mobile-launcher";
 
-    document.body.appendChild(launcher);
-  }
+      sidebarTabs.forEach(tab => {
+        const href = tab.getAttribute("onclick") || "";
+        const nameSpan = tab.querySelector(".sidebar-tabName");
+        const label = nameSpan ? nameSpan.textContent.trim() : "Unnamed";
+        const icon = tab.querySelector("img")?.src || "";
 
-  // Fallback: poll until tabs are found
-  const pollTabs = setInterval(() => {
-    const tabs = document.querySelectorAll(".side-tab-link");
-    if (tabs.length > 0) {
-      clearInterval(pollTabs);
-      console.log("✅ Tabs found by polling");
-      buildLauncherFromSidebar(tabs);
+        const btn = document.createElement("button");
+        btn.className = "mobile-launcher-button";
+        btn.innerHTML = icon ? `<img src="${icon}" alt="" class="launcher-icon"> ${label}` : label;
+        btn.onclick = () => tab.click();
+
+        launcher.appendChild(btn);
+      });
+
+      document.body.appendChild(launcher);
     } else {
-      console.log("⏳ Still waiting for tabs...");
+      console.log("⌛ Sidebar not ready yet, waiting...");
     }
   }, 500);
-
-  // Also observe whole document for robustness
-  const observer = new MutationObserver(() => {
-    const tabs = document.querySelectorAll(".side-tab-link");
-    if (tabs.length > 0) {
-      observer.disconnect();
-      console.log("✅ Tabs found by observer");
-      buildLauncherFromSidebar(tabs);
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
 }
