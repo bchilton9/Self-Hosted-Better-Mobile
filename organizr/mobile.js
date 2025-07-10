@@ -1,3 +1,5 @@
+console.log("🎉 mobile.js loaded!");
+
 // Mobile enhancements for Organizr
 if (window.innerWidth <= 768) {
   // Inject mobile.css for layout fixes
