@@ -1,156 +1,201 @@
-// mobile.js v9.2
+// version: 10 🐳
 
-document.addEventListener("DOMContentLoaded", function () {
-  const launcher = document.createElement("div");
-  launcher.className = "mobile-launcher";
-  document.body.appendChild(launcher);
+console.log("📱 mobile.js loaded!");
 
-  const tabGroups = document.querySelectorAll("li.allGroupsList");
-  const uncategorized = [];
-  const categorized = [];
+if (window.innerWidth < 768) {
+  console.log("📱 Mobile view detected");
 
-  tabGroups.forEach((group) => {
-    const name = group.dataset.groupName?.trim() || "Uncategorized";
-    const tabs = group.querySelectorAll("li.allTabsList");
-
-    const apps = [...tabs].map((tab) => {
-      const name = tab.querySelector(".sidebar-tabName")?.textContent.trim() || "";
-      const icon = tab.querySelector("img, i")?.cloneNode(true);
-      const onclick = tab.querySelector("a")?.getAttribute("onclick");
-      return { name, icon, onclick };
-    });
-
-    if (name.toLowerCase() === "uncategorized") {
-      uncategorized.push(...apps);
-    } else {
-      categorized.push({ name, apps });
+  const waitForTabs = (retries = 30) => {
+    const groups = document.querySelectorAll("li.allGroupsList");
+    if (!groups.length && retries > 0) {
+      console.warn("⏳ Waiting for tab groups...");
+      setTimeout(() => waitForTabs(retries - 1), 500);
+      return;
     }
-  });
+    if (!groups.length) {
+      console.error("❌ Tab groups not found.");
+      return;
+    }
+    console.log("✅ Tab groups found");
+    buildLauncher(groups);
+  };
 
-  function createAppGrid(apps) {
-    const grid = document.createElement("div");
-    grid.className = "app-grid";
-
-    apps.forEach((app) => {
-      const button = document.createElement("div");
-      button.className = "app-button";
-      if (app.icon) button.appendChild(app.icon);
-      const label = document.createElement("div");
-      label.textContent = app.name;
-      label.className = "app-label";
-      button.appendChild(label);
-      button.onclick = () => {
-        if (app.onclick) eval(app.onclick);
-      };
-      grid.appendChild(button);
+  function buildLauncher(groupEls) {
+    const launcher = document.createElement("div");
+    launcher.id = "mobile-launcher";
+    Object.assign(launcher.style, {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.85)",
+      zIndex: 9999,
+      overflowY: "auto",
+      padding: "20px",
+      display: "none",
+      fontFamily: "sans-serif",
     });
 
-    return grid;
-  }
+    const categorized = [];
 
-  function createCategorySection(name, apps, collapsible = true) {
-    const section = document.createElement("div");
-    section.className = "category-section";
+    groupEls.forEach(groupEl => {
+      const cat = groupEl.getAttribute("data-group-name")?.trim() || "Uncategorized";
+      const tabLinks = [...groupEl.querySelectorAll("li.allTabsList a.waves-effect")];
 
-    const header = document.createElement("div");
-    header.className = "category-header";
-    header.textContent = name;
+      if (!tabLinks.length) return;
 
-    if (collapsible) {
-      const toggle = document.createElement("span");
-      toggle.textContent = "▾";
-      toggle.className = "collapse-toggle";
-      header.prepend(toggle);
+      categorized.push({ cat, tabLinks });
+    });
 
-      header.addEventListener("click", () => {
-        grid.classList.toggle("hidden");
-        toggle.textContent = grid.classList.contains("hidden") ? "▸" : "▾";
+    // Move Uncategorized to top
+    categorized.sort((a, b) => (a.cat === "Uncategorized" ? -1 : b.cat === "Uncategorized" ? 1 : 0));
+
+    categorized.forEach(({ cat, tabLinks }) => {
+      const groupBox = document.createElement("div");
+      Object.assign(groupBox.style, {
+        border: "1px solid #444",
+        borderRadius: "10px",
+        marginBottom: "20px",
+        padding: "10px",
+        background: "#111",
       });
-    }
 
-    const grid = createAppGrid(apps);
-    if (collapsible) grid.classList.add("collapsible-grid");
+      const header = document.createElement("div");
+      Object.assign(header.style, {
+        display: "flex",
+        alignItems: "center",
+        marginBottom: "10px",
+        cursor: cat === "Uncategorized" ? "default" : "pointer",
+      });
 
-    section.appendChild(header);
-    section.appendChild(grid);
-    return section;
+      const toggleIcon = document.createElement("span");
+      toggleIcon.textContent = "▾";
+      toggleIcon.style.marginRight = "10px";
+      toggleIcon.style.display = cat === "Uncategorized" ? "none" : "inline";
+
+      const title = document.createElement("h3");
+      title.textContent = cat;
+      Object.assign(title.style, {
+        margin: 0,
+        fontSize: "18px",
+        color: "#fff",
+      });
+
+      header.append(toggleIcon, title);
+      groupBox.append(header);
+
+      const grid = document.createElement("div");
+      grid.className = "icon-grid";
+
+      Object.assign(grid.style, {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))",
+        gap: "12px",
+        justifyItems: "center",
+      });
+
+      tabLinks.forEach(link => {
+        const label = link.querySelector(".sidebar-tabName")?.textContent.trim() || link.textContent.trim();
+        const iconSrc = link.querySelector("img")?.src || "";
+        if (!label) return;
+
+        const wrap = document.createElement("div");
+        Object.assign(wrap.style, {
+          width: "72px",
+          height: "72px",
+          background: "#222",
+          borderRadius: "18px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          cursor: "pointer",
+        });
+
+        const img = document.createElement("img");
+        img.src = iconSrc;
+        Object.assign(img.style, {
+          width: "32px",
+          height: "32px",
+          objectFit: "contain",
+          marginBottom: "4px",
+        });
+
+        const txt = document.createElement("div");
+        txt.textContent = label;
+        Object.assign(txt.style, {
+          fontSize: "10px",
+          color: "#fff",
+          lineHeight: "12px",
+          maxWidth: "64px",
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+        });
+
+        wrap.onclick = () => {
+          launcher.style.display = "none";
+          link.click();
+        };
+
+        wrap.appendChild(img);
+        wrap.appendChild(txt);
+        grid.appendChild(wrap);
+      });
+
+      groupBox.appendChild(grid);
+
+      if (cat !== "Uncategorized") {
+        header.onclick = () => {
+          const shown = grid.style.display !== "none";
+          grid.style.display = shown ? "none" : "grid";
+          toggleIcon.textContent = shown ? "▸" : "▾";
+        };
+      }
+
+      launcher.appendChild(groupBox);
+    });
+
+    document.body.appendChild(launcher);
+
+    // Toggle button
+    const toggle = document.createElement("button");
+    toggle.textContent = "☰";
+    Object.assign(toggle.style, {
+      position: "fixed",
+      top: "10px",
+      left: "10px",
+      zIndex: "10000",
+      background: "#111",
+      color: "#fff",
+      border: "none",
+      borderRadius: "6px",
+      padding: "6px 12px",
+      fontSize: "20px",
+      cursor: "pointer",
+    });
+    toggle.onclick = () => {
+      launcher.style.display = launcher.style.display === "none" ? "block" : "none";
+    };
+
+    document.body.appendChild(toggle);
+
+    // Hide original sidebar
+    const sidebar = document.querySelector("aside, .side-menu, #side-menu");
+    if (sidebar) sidebar.style.display = "none";
+
+    // Auto adjust layout on orientation change
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        document.querySelectorAll(".icon-grid").forEach(grid => {
+          grid.style.gridTemplateColumns =
+            window.innerWidth > window.innerHeight ? "repeat(6, 1fr)" : "repeat(auto-fit, minmax(80px, 1fr))";
+        });
+      }, 500);
+    });
   }
 
-  launcher.innerHTML = ""; // Clear existing content
-  launcher.appendChild(createCategorySection("Uncategorized", uncategorized, false));
-  categorized.forEach((cat) => {
-    launcher.appendChild(createCategorySection(cat.name, cat.apps, true));
-  });
-});
-
-// Styling
-const style = document.createElement("style");
-style.textContent = `
-  .mobile-launcher {
-    position: fixed;
-    top: 60px;
-    left: 0;
-    right: 0;
-    margin: auto;
-    max-width: 1000px;
-    padding: 20px;
-    z-index: 9999;
-    background-color: rgba(0, 0, 0, 0.65);
-    border-radius: 16px;
-  }
-  .category-section {
-    margin-bottom: 30px;
-  }
-  .category-header {
-    font-size: 1.3em;
-    margin-bottom: 10px;
-    color: #fff;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-  }
-  .collapse-toggle {
-    font-size: 1.2em;
-    user-select: none;
-  }
-  .app-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 15px;
-  }
-  .app-button {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background-color: #222;
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #eee;
-    font-size: 0.9em;
-    text-align: center;
-  }
-  .app-button img, .app-button i {
-    max-width: 40%;
-    max-height: 40%;
-    margin-bottom: 6px;
-  }
-  .app-label {
-    font-size: 0.75em;
-    line-height: 1em;
-    word-break: break-word;
-  }
-  .collapsible-grid.hidden {
-    display: none;
-  }
-
-  @media (orientation: landscape) {
-    .app-grid {
-      grid-template-columns: repeat(6, 1fr) !important;
-    }
-  }
-`;
-document.head.appendChild(style);
+  waitForTabs();
+}
