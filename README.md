@@ -1,9 +1,3 @@
-—
-layout: default
-title: ChilSoft - SHBM
-—
-Your content goes here.
-
 # 📱 Self-Hosted Better Mobile
 
 A lightweight customization project that improves mobile usability across self-hosted apps.
