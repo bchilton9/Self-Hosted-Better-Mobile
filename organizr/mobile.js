@@ -1,194 +1,156 @@
-// version: 9.1 🐳
-console.log("📱 mobile.js v9 loaded");
+// mobile.js v9.2
 
-if (window.innerWidth < 768) {
-  const waitForSidebar = (retries = 30) => {
-    const sidebar = document.querySelector("aside, .side-menu, #side-menu");
-    if (!sidebar && retries > 0) {
-      setTimeout(() => waitForSidebar(retries - 1), 300);
-      return;
+document.addEventListener("DOMContentLoaded", function () {
+  const launcher = document.createElement("div");
+  launcher.className = "mobile-launcher";
+  document.body.appendChild(launcher);
+
+  const tabGroups = document.querySelectorAll("li.allGroupsList");
+  const uncategorized = [];
+  const categorized = [];
+
+  tabGroups.forEach((group) => {
+    const name = group.dataset.groupName?.trim() || "Uncategorized";
+    const tabs = group.querySelectorAll("li.allTabsList");
+
+    const apps = [...tabs].map((tab) => {
+      const name = tab.querySelector(".sidebar-tabName")?.textContent.trim() || "";
+      const icon = tab.querySelector("img, i")?.cloneNode(true);
+      const onclick = tab.querySelector("a")?.getAttribute("onclick");
+      return { name, icon, onclick };
+    });
+
+    if (name.toLowerCase() === "uncategorized") {
+      uncategorized.push(...apps);
+    } else {
+      categorized.push({ name, apps });
     }
-    if (!sidebar) return;
-    buildLauncher(sidebar);
-  };
+  });
 
-  function buildLauncher(sidebar) {
-    const groups = {};
-    document.querySelectorAll("li.allGroupsList").forEach(group => {
-      const cat = group.getAttribute("data-group-name") || "Uncategorized";
-      group.querySelectorAll("li.allTabsList a.waves-effect").forEach(tab => {
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(tab);
-      });
-    });
+  function createAppGrid(apps) {
+    const grid = document.createElement("div");
+    grid.className = "app-grid";
 
-    // Also include any stray uncategorized tabs
-    document.querySelectorAll("a.waves-effect[onclick^='tabActions']").forEach(tab => {
-      if (!tab.closest("li.allTabsList")) return;
-      const parentGroup = tab.closest("li.allGroupsList");
-      if (!parentGroup) {
-        if (!groups["Uncategorized"]) groups["Uncategorized"] = [];
-        groups["Uncategorized"].push(tab);
-      }
-    });
-
-    const launcherCard = document.createElement("div");
-    launcherCard.id = "mobile-launcher";
-    Object.assign(launcherCard.style, {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "100%",
-      height: "100%",
-      background: "rgba(0,0,0,0.6)",
-      zIndex: "9999",
-      overflowY: "auto",
-      padding: "20px",
-      display: "none",
-      fontFamily: "sans-serif",
-      backdropFilter: "blur(6px)",
-    });
-
-    Object.entries(groups).forEach(([catName, tabs]) => {
-      if (!tabs.length) return;
-
-      const group = document.createElement("div");
-      Object.assign(group.style, {
-        border: "1px solid #444",
-        borderRadius: "10px",
-        marginBottom: "20px",
-        padding: "10px",
-        background: "#111",
-      });
-
-      const header = document.createElement("div");
-      Object.assign(header.style, {
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-        marginBottom: "10px",
-      });
-      const toggleIcon = document.createElement("span");
-      toggleIcon.textContent = "▾";
-      toggleIcon.style.marginRight = "10px";
-      const title = document.createElement("h3");
-      title.textContent = catName;
-      Object.assign(title.style, {
-        margin: 0,
-        fontSize: "18px",
-        color: "#fff",
-      });
-      header.append(toggleIcon, title);
-      group.append(header);
-
-      const iconGrid = document.createElement("div");
-      iconGrid.className = "icon-grid";
-      Object.assign(iconGrid.style, {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))",
-        gap: "16px",
-        justifyItems: "center",
-      });
-
-      tabs.forEach(link => {
-        const label = link.querySelector("span.sidebar-tabName, span.hide-menu")?.textContent.trim() || link.textContent.trim();
-        const iconSrc = link.querySelector("img")?.src;
-        const iconWrap = document.createElement("div");
-        Object.assign(iconWrap.style, {
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "80px",
-          height: "80px",
-          background: "#222",
-          borderRadius: "16px",
-          cursor: "pointer",
-        });
-
-        const img = document.createElement("img");
-        img.src = iconSrc || "";
-        Object.assign(img.style, {
-          width: "40px",
-          height: "40px",
-          marginBottom: "6px",
-          borderRadius: "10px",
-        });
-        img.onerror = () => {
-          img.remove();
-          const fallback = document.createElement("div");
-          fallback.textContent = label.charAt(0);
-          Object.assign(fallback.style, {
-            fontSize: "28px",
-            marginBottom: "4px",
-            color: "#fff",
-          });
-          iconWrap.prepend(fallback);
-        };
-        iconWrap.append(img);
-
-        const text = document.createElement("div");
-        text.textContent = label;
-        Object.assign(text.style, {
-          color: "#fff",
-          fontSize: "12px",
-          textAlign: "center",
-        });
-        iconWrap.append(text);
-
-        iconWrap.onclick = () => {
-          launcherCard.style.display = "none";
-          link.click();
-        };
-
-        iconGrid.append(iconWrap);
-      });
-
-      header.onclick = () => {
-        const visible = iconGrid.style.display !== "none";
-        iconGrid.style.display = visible ? "none" : "grid";
-        toggleIcon.textContent = visible ? "▸" : "▾";
+    apps.forEach((app) => {
+      const button = document.createElement("div");
+      button.className = "app-button";
+      if (app.icon) button.appendChild(app.icon);
+      const label = document.createElement("div");
+      label.textContent = app.name;
+      label.className = "app-label";
+      button.appendChild(label);
+      button.onclick = () => {
+        if (app.onclick) eval(app.onclick);
       };
-
-      group.append(iconGrid);
-      launcherCard.append(group);
+      grid.appendChild(button);
     });
 
-    document.body.append(launcherCard);
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.textContent = "☰";
-    Object.assign(toggleBtn.style, {
-      position: "fixed",
-      top: "10px",
-      left: "10px",
-      zIndex: "10000",
-      background: "#111",
-      color: "#fff",
-      border: "none",
-      borderRadius: "6px",
-      padding: "6px 12px",
-      fontSize: "20px",
-      cursor: "pointer",
-    });
-    toggleBtn.onclick = () => {
-      launcherCard.style.display =
-        launcherCard.style.display === "none" ? "block" : "none";
-    };
-    document.body.append(toggleBtn);
-
-    sidebar.style.display = "none";
-
-    // Resize listener to reset grid layout
-    window.addEventListener("resize", () => {
-      document.querySelectorAll(".icon-grid").forEach(grid => {
-        grid.style.gridTemplateColumns =
-          window.innerWidth > window.innerHeight
-            ? "repeat(6, 1fr)"
-            : "repeat(auto-fit, minmax(80px, 1fr))";
-      });
-    });
+    return grid;
   }
 
-  waitForSidebar();
-}
+  function createCategorySection(name, apps, collapsible = true) {
+    const section = document.createElement("div");
+    section.className = "category-section";
+
+    const header = document.createElement("div");
+    header.className = "category-header";
+    header.textContent = name;
+
+    if (collapsible) {
+      const toggle = document.createElement("span");
+      toggle.textContent = "▾";
+      toggle.className = "collapse-toggle";
+      header.prepend(toggle);
+
+      header.addEventListener("click", () => {
+        grid.classList.toggle("hidden");
+        toggle.textContent = grid.classList.contains("hidden") ? "▸" : "▾";
+      });
+    }
+
+    const grid = createAppGrid(apps);
+    if (collapsible) grid.classList.add("collapsible-grid");
+
+    section.appendChild(header);
+    section.appendChild(grid);
+    return section;
+  }
+
+  launcher.innerHTML = ""; // Clear existing content
+  launcher.appendChild(createCategorySection("Uncategorized", uncategorized, false));
+  categorized.forEach((cat) => {
+    launcher.appendChild(createCategorySection(cat.name, cat.apps, true));
+  });
+});
+
+// Styling
+const style = document.createElement("style");
+style.textContent = `
+  .mobile-launcher {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    margin: auto;
+    max-width: 1000px;
+    padding: 20px;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.65);
+    border-radius: 16px;
+  }
+  .category-section {
+    margin-bottom: 30px;
+  }
+  .category-header {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .collapse-toggle {
+    font-size: 1.2em;
+    user-select: none;
+  }
+  .app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 15px;
+  }
+  .app-button {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-color: #222;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #eee;
+    font-size: 0.9em;
+    text-align: center;
+  }
+  .app-button img, .app-button i {
+    max-width: 40%;
+    max-height: 40%;
+    margin-bottom: 6px;
+  }
+  .app-label {
+    font-size: 0.75em;
+    line-height: 1em;
+    word-break: break-word;
+  }
+  .collapsible-grid.hidden {
+    display: none;
+  }
+
+  @media (orientation: landscape) {
+    .app-grid {
+      grid-template-columns: repeat(6, 1fr) !important;
+    }
+  }
+`;
+document.head.appendChild(style);
