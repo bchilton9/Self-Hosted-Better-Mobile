@@ -1,4 +1,4 @@
-// version: 5.1 🐳
+// version: 6 📱
 
 console.log("📱 mobile.js loaded!");
 
@@ -27,7 +27,8 @@ if (window.innerWidth < 768) {
       if (el.matches("li.nav-small-cap, .nav-small-cap")) {
         const text = el.textContent.trim();
         if (text) currentCat = text;
-      } else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
+      }
+      else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
         groups.push({ cat: currentCat, linkEl: el });
       }
     });
@@ -36,7 +37,7 @@ if (window.innerWidth < 768) {
     launcherCard.id = "mobile-launcher";
     Object.assign(launcherCard.style, {
       position: "fixed", top: "0", left: "0", width: "100%",
-      height: "100%", background: "rgba(0,0,0,0.95)",
+      height: "100%", background: "rgba(0,0,0,0.96)",
       zIndex: "9999", overflowY: "auto", padding: "20px",
       display: "none", fontFamily: "sans-serif"
     });
@@ -48,8 +49,8 @@ if (window.innerWidth < 768) {
 
       const group = document.createElement("div");
       Object.assign(group.style, {
-        border: "1px solid #444", borderRadius: "10px",
-        marginBottom: "20px", padding: "10px", background: "#111"
+        border: "1px solid #444", borderRadius: "12px",
+        marginBottom: "24px", padding: "12px", background: "#111"
       });
 
       const header = document.createElement("div");
@@ -57,45 +58,53 @@ if (window.innerWidth < 768) {
         display: "flex", alignItems: "center", cursor: "pointer",
         marginBottom: "10px"
       });
+
       const toggleIcon = document.createElement("span");
       toggleIcon.textContent = "▾";
       Object.assign(toggleIcon.style, {
-        marginRight: "10px", fontSize: "16px", color: "#fff"
+        marginRight: "10px", fontSize: "16px", color: "#ccc"
       });
+
       const title = document.createElement("h3");
       title.textContent = catName;
       Object.assign(title.style, { margin: 0, fontSize: "18px", color: "#fff" });
+
       header.append(toggleIcon, title);
       group.append(header);
 
       const iconGrid = document.createElement("div");
       Object.assign(iconGrid.style, {
         display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "12px"
+        gap: "14px", marginTop: "8px"
       });
 
       items.forEach(link => {
         const label = link.querySelector("span.sidebar-tabName")?.textContent.trim() || link.textContent.trim();
         const iconSrc = link.querySelector("img")?.src;
+
         const iconWrap = document.createElement("div");
         Object.assign(iconWrap.style, {
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
-          background: "#222", borderRadius: "20px",
-          padding: "12px", cursor: "pointer",
-          width: "100%", aspectRatio: "1", boxSizing: "border-box"
+          background: "#222", borderRadius: "18px",
+          padding: "8px", cursor: "pointer",
+          height: "90px", width: "90px", overflow: "hidden"
         });
 
         const img = document.createElement("img");
         img.src = iconSrc || "";
         Object.assign(img.style, {
-          width: "48px", height: "48px", marginBottom: "6px", borderRadius: "12px"
+          width: "40px", height: "40px",
+          marginBottom: "6px", borderRadius: "10px"
         });
+
         img.onerror = () => {
           img.remove();
           const fallback = document.createElement("div");
           fallback.textContent = label.charAt(0);
-          Object.assign(fallback.style, { fontSize: "28px", marginBottom: "4px", color: "#fff" });
+          Object.assign(fallback.style, {
+            fontSize: "28px", marginBottom: "4px", color: "#fff"
+          });
           iconWrap.prepend(fallback);
         };
         iconWrap.append(img);
@@ -103,7 +112,7 @@ if (window.innerWidth < 768) {
         const text = document.createElement("div");
         text.textContent = label;
         Object.assign(text.style, {
-          color: "#fff", fontSize: "12px", textAlign: "center", wordBreak: "break-word"
+          color: "#fff", fontSize: "12px", textAlign: "center", lineHeight: "1.2"
         });
         iconWrap.append(text);
 
