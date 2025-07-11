@@ -1,4 +1,4 @@
-// version: 6 📱
+// version: 7 📱
 
 console.log("📱 mobile.js loaded!");
 
@@ -27,8 +27,7 @@ if (window.innerWidth < 768) {
       if (el.matches("li.nav-small-cap, .nav-small-cap")) {
         const text = el.textContent.trim();
         if (text) currentCat = text;
-      }
-      else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
+      } else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
         groups.push({ cat: currentCat, linkEl: el });
       }
     });
@@ -37,7 +36,7 @@ if (window.innerWidth < 768) {
     launcherCard.id = "mobile-launcher";
     Object.assign(launcherCard.style, {
       position: "fixed", top: "0", left: "0", width: "100%",
-      height: "100%", background: "rgba(0,0,0,0.96)",
+      height: "100%", background: "rgba(0,0,0,0.95)",
       zIndex: "9999", overflowY: "auto", padding: "20px",
       display: "none", fontFamily: "sans-serif"
     });
@@ -49,25 +48,24 @@ if (window.innerWidth < 768) {
 
       const group = document.createElement("div");
       Object.assign(group.style, {
-        border: "1px solid #444", borderRadius: "12px",
-        marginBottom: "24px", padding: "12px", background: "#111"
+        border: "1px solid #444", borderRadius: "10px",
+        marginBottom: "20px", padding: "10px", background: "#111"
       });
 
       const header = document.createElement("div");
       Object.assign(header.style, {
         display: "flex", alignItems: "center", cursor: "pointer",
-        marginBottom: "10px"
+        marginBottom: "10px", color: "#fff"
       });
 
       const toggleIcon = document.createElement("span");
       toggleIcon.textContent = "▾";
-      Object.assign(toggleIcon.style, {
-        marginRight: "10px", fontSize: "16px", color: "#ccc"
-      });
+      toggleIcon.style.marginRight = "10px";
+      toggleIcon.style.fontSize = "18px";
 
       const title = document.createElement("h3");
       title.textContent = catName;
-      Object.assign(title.style, { margin: 0, fontSize: "18px", color: "#fff" });
+      Object.assign(title.style, { margin: 0, fontSize: "18px" });
 
       header.append(toggleIcon, title);
       group.append(header);
@@ -75,44 +73,40 @@ if (window.innerWidth < 768) {
       const iconGrid = document.createElement("div");
       Object.assign(iconGrid.style, {
         display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "14px", marginTop: "8px"
+        gap: "14px", justifyItems: "center"
       });
 
       items.forEach(link => {
         const label = link.querySelector("span.sidebar-tabName")?.textContent.trim() || link.textContent.trim();
         const iconSrc = link.querySelector("img")?.src;
-
         const iconWrap = document.createElement("div");
         Object.assign(iconWrap.style, {
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
-          background: "#222", borderRadius: "18px",
-          padding: "8px", cursor: "pointer",
-          height: "90px", width: "90px", overflow: "hidden"
+          background: "#222", borderRadius: "16px",
+          padding: "10px", cursor: "pointer",
+          width: "80px", height: "80px"
         });
 
-        const img = document.createElement("img");
-        img.src = iconSrc || "";
-        Object.assign(img.style, {
-          width: "40px", height: "40px",
-          marginBottom: "6px", borderRadius: "10px"
-        });
-
-        img.onerror = () => {
-          img.remove();
+        if (iconSrc) {
+          const img = document.createElement("img");
+          img.src = iconSrc;
+          Object.assign(img.style, {
+            width: "40px", height: "40px", marginBottom: "6px",
+            objectFit: "contain"
+          });
+          iconWrap.append(img);
+        } else {
           const fallback = document.createElement("div");
           fallback.textContent = label.charAt(0);
-          Object.assign(fallback.style, {
-            fontSize: "28px", marginBottom: "4px", color: "#fff"
-          });
-          iconWrap.prepend(fallback);
-        };
-        iconWrap.append(img);
+          Object.assign(fallback.style, { fontSize: "28px", marginBottom: "4px", color: "#fff" });
+          iconWrap.append(fallback);
+        }
 
         const text = document.createElement("div");
         text.textContent = label;
         Object.assign(text.style, {
-          color: "#fff", fontSize: "12px", textAlign: "center", lineHeight: "1.2"
+          color: "#fff", fontSize: "11px", textAlign: "center", lineHeight: "1.2"
         });
         iconWrap.append(text);
 
@@ -139,8 +133,8 @@ if (window.innerWidth < 768) {
     toggleBtn.textContent = "☰";
     Object.assign(toggleBtn.style, {
       position: "fixed", top: "10px", left: "10px",
-      zIndex: "10000", background: "#111",
-      color: "#fff", border: "none", borderRadius: "6px",
+      zIndex: "10000", background: "#111", color: "#fff",
+      border: "none", borderRadius: "6px",
       padding: "6px 12px", fontSize: "20px", cursor: "pointer"
     });
     toggleBtn.onclick = () => {
