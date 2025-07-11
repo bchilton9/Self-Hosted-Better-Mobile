@@ -1,159 +1,141 @@
-// version: 11.1 🧪
+// version: 13
 
-console.log("📱 mobile.js loaded");
+console.log("📱 mobile.js v13 loaded");
 
 if (window.innerWidth < 768) {
   const waitForTabs = (retries = 20) => {
     const tabGroups = document.querySelectorAll("li.allGroupsList");
-    const tabLinks = document.querySelectorAll("li.allTabsList");
-
-    if (tabLinks.length === 0 && retries > 0) {
-      console.warn("⏳ Waiting for tabs...");
-      setTimeout(() => waitForTabs(retries - 1), 500);
+    if (!tabGroups.length && retries > 0) {
+      console.log("⏳ Waiting for tab groups...");
+      setTimeout(() => waitForTabs(retries - 1), 300);
       return;
     }
-
-    if (!tabLinks.length) {
+    if (!tabGroups.length) {
       console.error("❌ No tabs found");
       return;
     }
-
-    console.log("✅ Tabs found -- building launcher...");
+    console.log("✅ Tabs found");
     buildLauncher(tabGroups);
   };
 
-  const buildLauncher = (groups) => {
-    const card = document.createElement("div");
-    card.id = "mobile-launcher";
-    Object.assign(card.style, {
-      position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-      background: "rgba(0,0,0,0.9)", zIndex: 9999, overflowY: "auto", padding: "10px",
-      display: "none", fontFamily: "sans-serif"
-    });
+  function buildLauncher(groups) {
+    const launcher = document.createElement("div");
+    launcher.id = "mobile-launcher";
+    launcher.style = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95); color: #fff; overflow-y: auto;
+      z-index: 9999; display: none; padding: 15px; font-family: sans-serif;
+    `;
 
     groups.forEach(group => {
-      const category = group.getAttribute("data-group-name") || "Uncategorized";
-      const isUncategorized = category === "Uncategorized";
-      const tabs = group.querySelectorAll("li.allTabsList");
+      const cat = group.getAttribute("data-group-name") || "Uncategorized";
+      const links = group.querySelectorAll("li.allTabsList a");
 
-      const wrapper = document.createElement("div");
-      Object.assign(wrapper.style, {
-        margin: "10px", padding: "10px", borderRadius: "10px",
-        background: "#1a1a1a", border: "1px solid #444"
-      });
+      if (!links.length) return;
 
-      if (!isUncategorized) {
-        const header = document.createElement("div");
-        header.style.display = "flex";
-        header.style.alignItems = "center";
-        header.style.cursor = "pointer";
-        header.style.marginBottom = "8px";
+      const card = document.createElement("div");
+      card.style = `
+        background: #111; border: 1px solid #333; border-radius: 10px;
+        margin-bottom: 20px; padding: 10px;
+      `;
 
-        const toggle = document.createElement("span");
-        toggle.textContent = "▾";
-        toggle.style.marginRight = "8px";
-        toggle.style.fontSize = "18px";
+      const header = document.createElement("div");
+      header.style = `
+        display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;
+      `;
 
-        const title = document.createElement("h3");
-        title.textContent = category;
-        Object.assign(title.style, {
-          margin: 0, fontSize: "16px", color: "#fff"
-        });
+      const toggle = document.createElement("span");
+      toggle.textContent = cat === "Uncategorized" ? "" : "▾";
+      toggle.style = "margin-right: 8px;";
 
-        header.append(toggle, title);
-        wrapper.appendChild(header);
-      }
+      const title = document.createElement("h3");
+      title.textContent = cat === "Uncategorized" ? "" : cat;
+      title.style = "margin: 0; font-size: 18px;";
+
+      header.append(toggle, title);
+      card.append(header);
 
       const grid = document.createElement("div");
-      grid.classList.add("launcher-grid");
-      Object.assign(grid.style, {
-        display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "12px"
-      });
+      grid.style = `
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      `;
+      grid.className = "icon-grid";
 
-      tabs.forEach(tab => {
-        const a = tab.querySelector("a");
-        const label = tab.querySelector(".sidebar-tabName")?.textContent?.trim() || "App";
-        const iconImg = tab.querySelector("img");
-        const iconFA = tab.querySelector("i.fa");
-
+      links.forEach(link => {
         const box = document.createElement("div");
-        Object.assign(box.style, {
-          display: "flex", flexDirection: "column", alignItems: "center",
-          justifyContent: "center", background: "#222", borderRadius: "12px",
-          padding: "10px", height: "100%", aspectRatio: "1 / 1", cursor: "pointer"
-        });
+        box.style = `
+          background: #222; border-radius: 16px; padding: 10px;
+          display: flex; flex-direction: column; align-items: center;
+          justify-content: center; cursor: pointer;
+        `;
+        box.onclick = () => {
+          launcher.style.display = "none";
+          link.click();
+        };
 
-        if (iconImg) {
-          const img = document.createElement("img");
-          img.src = iconImg.src;
-          Object.assign(img.style, { width: "48px", height: "48px", objectFit: "contain", marginBottom: "6px" });
-          box.appendChild(img);
-        } else if (iconFA) {
-          const icon = iconFA.cloneNode(true);
-          icon.style.fontSize = "36px";
-          icon.style.color = "#fff";
-          icon.style.marginBottom = "6px";
-          box.appendChild(icon);
+        const img = link.querySelector("img");
+        const fa = link.querySelector("i");
+
+        if (img?.src) {
+          const icon = document.createElement("img");
+          icon.src = img.src;
+          icon.style = "width: 48px; height: 48px; object-fit: contain;";
+          box.append(icon);
+        } else if (fa?.className) {
+          const icon = document.createElement("i");
+          icon.className = fa.className;
+          icon.style = "font-size: 42px; margin-bottom: 4px;";
+          box.append(icon);
         }
 
-        const text = document.createElement("div");
-        text.textContent = label;
-        Object.assign(text.style, {
-          color: "#fff", fontSize: "13px", marginTop: "4px", textAlign: "center"
-        });
+        const name = document.createElement("div");
+        name.textContent = link.querySelector("span")?.textContent.trim() || "App";
+        name.style = "font-size: 12px; text-align: center; margin-top: 6px;";
+        box.append(name);
 
-        box.appendChild(text);
-        box.onclick = () => {
-          card.style.display = "none";
-          a.click();
-        };
-        grid.appendChild(box);
+        grid.append(box);
       });
 
-      wrapper.appendChild(grid);
-
-      if (!isUncategorized) {
-        wrapper.querySelector("div").onclick = () => {
-          const gridVisible = grid.style.display !== "none";
-          grid.style.display = gridVisible ? "none" : "grid";
-          wrapper.querySelector("span").textContent = gridVisible ? "▸" : "▾";
+      if (cat !== "Uncategorized") {
+        header.onclick = () => {
+          const isOpen = grid.style.display !== "none";
+          grid.style.display = isOpen ? "none" : "grid";
+          toggle.textContent = isOpen ? "▸" : "▾";
         };
       }
 
-      card.appendChild(wrapper);
+      card.append(grid);
+      launcher.append(card);
     });
 
-    document.body.appendChild(card);
+    document.body.append(launcher);
 
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "☰";
-    Object.assign(toggleBtn.style, {
-      position: "fixed", top: "10px", left: "10px", zIndex: "10000",
-      background: "#111", color: "#fff", border: "none",
-      borderRadius: "6px", padding: "6px 12px", fontSize: "20px", cursor: "pointer"
-    });
-
+    toggleBtn.style = `
+      position: fixed; top: 10px; left: 10px; z-index: 10000;
+      background: #111; color: #fff; border: none; border-radius: 6px;
+      padding: 6px 12px; font-size: 20px; cursor: pointer;
+    `;
     toggleBtn.onclick = () => {
-      card.style.display = card.style.display === "none" ? "block" : "none";
+      launcher.style.display = launcher.style.display === "none" ? "block" : "none";
     };
+    document.body.append(toggleBtn);
 
-    document.body.appendChild(toggleBtn);
     const sidebar = document.querySelector("aside, .side-menu, #side-menu");
     if (sidebar) sidebar.style.display = "none";
-  };
+
+    // Resize for landscape
+    const updateColumns = () => {
+      const cols = window.innerWidth > window.innerHeight ? 6 : 3;
+      document.querySelectorAll(".icon-grid").forEach(grid => {
+        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      });
+    };
+
+    window.addEventListener("resize", updateColumns);
+    updateColumns(); // initial call
+  }
 
   waitForTabs();
-
-  const updateColumns = () => {
-    document.querySelectorAll(".launcher-grid").forEach(grid => {
-      const cols = window.innerWidth > window.innerHeight ? 6 : 3;
-      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    });
-  };
-
-  window.addEventListener("resize", updateColumns);
-  window.addEventListener("orientationchange", updateColumns);
-  updateColumns();
 }
