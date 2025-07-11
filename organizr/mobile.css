@@ -122,3 +122,76 @@ body::after {
   font-size: 0.8rem;
   margin-top: 0.3rem;
 }
+
+/* v12 Launcher Styles */
+#custom-launcher {
+  background: rgba(0, 0, 0, 0.8);
+  padding-bottom: 100px;
+}
+
+.launcher-group {
+  background: #1e1e1e;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.launcher-group-header {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.launcher-group-toggle {
+  margin-right: 8px;
+  color: #aaa;
+}
+
+.launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 12px;
+  justify-items: center;
+}
+
+.launcher-group.collapsed .launcher-grid {
+  display: none;
+}
+
+.launcher-icon-box {
+  width: 90px;
+  height: 90px;
+  background: #2c2c2c;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.launcher-icon-box:hover {
+  background: #333;
+}
+
+.launcher-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.launcher-icon img,
+.launcher-icon i {
+  max-width: 40px;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+.launcher-label {
+  font-size: 0.75em;
+  text-align: center;
+  color: #ccc;
+  word-wrap: break-word;
+  line-height: 1.1;
+}
