@@ -1,153 +1,145 @@
-// version 5
-console.log("📱 mobile.js v3 loaded!");
+// version: 5.1 🐳
+
+console.log("📱 mobile.js loaded!");
 
 if (window.innerWidth < 768) {
   console.log("📱 Mobile view detected");
 
-  function waitForSidebar(retries = 20) {
-    const sidebar = document.querySelector("#sidebarnav");
+  const waitForSidebar = (retries = 30) => {
+    const sidebar = document.querySelector("aside, .side-menu, #side-menu");
     if (!sidebar && retries > 0) {
-      console.warn("⏳ Sidebar not found yet, retrying...");
-      setTimeout(() => waitForSidebar(retries - 1), 300);
+      console.warn("⏳ Sidebar not found, retrying...");
+      setTimeout(() => waitForSidebar(retries - 1), 500);
       return;
     }
     if (!sidebar) {
-      console.error("❌ Failed to find sidebar");
+      console.error("❌ Gave up waiting for sidebar.");
       return;
     }
-    console.log("✅ Sidebar found!");
-    parseTabs(sidebar);
-  }
+    console.log("✅ Sidebar found! Extracting tabs and categories...");
+    buildLauncher(sidebar);
+  };
 
-  function parseTabs(sidebar) {
-    const launcher = document.createElement("div");
-    launcher.id = "mobile-launcher";
-    launcher.style.position = "fixed";
-    launcher.style.top = "0";
-    launcher.style.left = "0";
-    launcher.style.width = "100%";
-    launcher.style.height = "100%";
-    launcher.style.background = "rgba(0, 0, 0, 0.95)";
-    launcher.style.zIndex = "9999";
-    launcher.style.overflowY = "auto";
-    launcher.style.padding = "20px";
-    launcher.style.display = "none";
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.innerHTML = "☰";
-    toggleBtn.style.position = "fixed";
-    toggleBtn.style.top = "10px";
-    toggleBtn.style.left = "10px";
-    toggleBtn.style.zIndex = "10000";
-    toggleBtn.style.background = "#222";
-    toggleBtn.style.color = "#fff";
-    toggleBtn.style.border = "none";
-    toggleBtn.style.borderRadius = "5px";
-    toggleBtn.style.padding = "10px 14px";
-    toggleBtn.style.fontSize = "18px";
-    toggleBtn.style.boxShadow = "0 0 5px #000";
-    toggleBtn.onclick = () => {
-      launcher.style.display = launcher.style.display === "none" ? "block" : "none";
-    };
-
-    const groups = Array.from(sidebar.querySelectorAll("li.nav-small-cap"));
-    groups.forEach((groupHeader, i) => {
-      const groupName = groupHeader.textContent.trim() || "Uncategorized";
-      const groupContainer = document.createElement("div");
-      groupContainer.className = "category-box";
-      groupContainer.style.marginBottom = "25px";
-      groupContainer.style.border = "1px solid #555";
-      groupContainer.style.borderRadius = "10px";
-      groupContainer.style.padding = "10px";
-      groupContainer.style.background = "#111";
-
-      const titleRow = document.createElement("div");
-      titleRow.style.display = "flex";
-      titleRow.style.alignItems = "center";
-      titleRow.style.marginBottom = "10px";
-
-      const collapseBtn = document.createElement("span");
-      collapseBtn.textContent = "🔽";
-      collapseBtn.style.cursor = "pointer";
-      collapseBtn.style.marginRight = "10px";
-      collapseBtn.style.fontSize = "16px";
-
-      const title = document.createElement("strong");
-      title.textContent = groupName;
-      title.style.fontSize = "16px";
-      title.style.color = "#fff";
-
-      titleRow.appendChild(collapseBtn);
-      titleRow.appendChild(title);
-      groupContainer.appendChild(titleRow);
-
-      const buttonGrid = document.createElement("div");
-      buttonGrid.style.display = "grid";
-      buttonGrid.style.gridTemplateColumns = "repeat(3, 1fr)";
-      buttonGrid.style.gap = "10px";
-
-      collapseBtn.onclick = () => {
-        buttonGrid.style.display = buttonGrid.style.display === "none" ? "grid" : "none";
-        collapseBtn.textContent = buttonGrid.style.display === "none" ? "▶️" : "🔽";
-      };
-
-      let tab = groupHeader.nextElementSibling;
-      while (tab && !tab.classList.contains("nav-small-cap")) {
-        const link = tab.querySelector('a[onclick^="tabActions"]');
-        if (link) {
-          const label = link.querySelector("span")?.textContent?.trim();
-          const icon = link.querySelector("img")?.getAttribute("src") || "";
-
-          const btn = document.createElement("div");
-          btn.style.background = "#222";
-          btn.style.border = "1px solid #444";
-          btn.style.borderRadius = "12px";
-          btn.style.textAlign = "center";
-          btn.style.padding = "10px";
-          btn.style.color = "#fff";
-          btn.style.fontSize = "12px";
-          btn.style.cursor = "pointer";
-          btn.style.aspectRatio = "1/1";
-          btn.style.display = "flex";
-          btn.style.flexDirection = "column";
-          btn.style.justifyContent = "center";
-          btn.style.alignItems = "center";
-
-          if (icon) {
-            const img = document.createElement("img");
-            img.src = icon;
-            img.alt = label;
-            img.style.width = "36px";
-            img.style.height = "36px";
-            img.style.marginBottom = "5px";
-            img.style.objectFit = "contain";
-            btn.appendChild(img);
-          }
-
-          const name = document.createElement("div");
-          name.textContent = label;
-          name.style.overflow = "hidden";
-          name.style.textOverflow = "ellipsis";
-          name.style.whiteSpace = "nowrap";
-          btn.appendChild(name);
-
-          btn.onclick = () => {
-            link.click();
-            launcher.style.display = "none";
-          };
-
-          buttonGrid.appendChild(btn);
-        }
-
-        tab = tab.nextElementSibling;
+  function buildLauncher(sidebar) {
+    const groups = [];
+    let currentCat = "Uncategorized";
+    sidebar.querySelectorAll("*").forEach(el => {
+      if (el.matches("li.nav-small-cap, .nav-small-cap")) {
+        const text = el.textContent.trim();
+        if (text) currentCat = text;
+      } else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
+        groups.push({ cat: currentCat, linkEl: el });
       }
-
-      groupContainer.appendChild(buttonGrid);
-      launcher.appendChild(groupContainer);
     });
 
-    document.body.appendChild(toggleBtn);
-    document.body.appendChild(launcher);
+    const launcherCard = document.createElement("div");
+    launcherCard.id = "mobile-launcher";
+    Object.assign(launcherCard.style, {
+      position: "fixed", top: "0", left: "0", width: "100%",
+      height: "100%", background: "rgba(0,0,0,0.95)",
+      zIndex: "9999", overflowY: "auto", padding: "20px",
+      display: "none", fontFamily: "sans-serif"
+    });
+
+    const catOrder = [...new Set(groups.map(g => g.cat))];
+    catOrder.forEach(catName => {
+      const items = groups.filter(g => g.cat === catName).map(g => g.linkEl);
+      if (!items.length) return;
+
+      const group = document.createElement("div");
+      Object.assign(group.style, {
+        border: "1px solid #444", borderRadius: "10px",
+        marginBottom: "20px", padding: "10px", background: "#111"
+      });
+
+      const header = document.createElement("div");
+      Object.assign(header.style, {
+        display: "flex", alignItems: "center", cursor: "pointer",
+        marginBottom: "10px"
+      });
+      const toggleIcon = document.createElement("span");
+      toggleIcon.textContent = "▾";
+      Object.assign(toggleIcon.style, {
+        marginRight: "10px", fontSize: "16px", color: "#fff"
+      });
+      const title = document.createElement("h3");
+      title.textContent = catName;
+      Object.assign(title.style, { margin: 0, fontSize: "18px", color: "#fff" });
+      header.append(toggleIcon, title);
+      group.append(header);
+
+      const iconGrid = document.createElement("div");
+      Object.assign(iconGrid.style, {
+        display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+        gap: "12px"
+      });
+
+      items.forEach(link => {
+        const label = link.querySelector("span.sidebar-tabName")?.textContent.trim() || link.textContent.trim();
+        const iconSrc = link.querySelector("img")?.src;
+        const iconWrap = document.createElement("div");
+        Object.assign(iconWrap.style, {
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          background: "#222", borderRadius: "20px",
+          padding: "12px", cursor: "pointer",
+          width: "100%", aspectRatio: "1", boxSizing: "border-box"
+        });
+
+        const img = document.createElement("img");
+        img.src = iconSrc || "";
+        Object.assign(img.style, {
+          width: "48px", height: "48px", marginBottom: "6px", borderRadius: "12px"
+        });
+        img.onerror = () => {
+          img.remove();
+          const fallback = document.createElement("div");
+          fallback.textContent = label.charAt(0);
+          Object.assign(fallback.style, { fontSize: "28px", marginBottom: "4px", color: "#fff" });
+          iconWrap.prepend(fallback);
+        };
+        iconWrap.append(img);
+
+        const text = document.createElement("div");
+        text.textContent = label;
+        Object.assign(text.style, {
+          color: "#fff", fontSize: "12px", textAlign: "center", wordBreak: "break-word"
+        });
+        iconWrap.append(text);
+
+        iconWrap.onclick = () => {
+          launcherCard.style.display = "none";
+          link.click();
+        };
+        iconGrid.append(iconWrap);
+      });
+
+      header.onclick = () => {
+        const visible = iconGrid.style.display !== "none";
+        iconGrid.style.display = visible ? "none" : "grid";
+        toggleIcon.textContent = visible ? "▸" : "▾";
+      };
+
+      group.append(iconGrid);
+      launcherCard.append(group);
+    });
+
+    document.body.append(launcherCard);
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.textContent = "☰";
+    Object.assign(toggleBtn.style, {
+      position: "fixed", top: "10px", left: "10px",
+      zIndex: "10000", background: "#111",
+      color: "#fff", border: "none", borderRadius: "6px",
+      padding: "6px 12px", fontSize: "20px", cursor: "pointer"
+    });
+    toggleBtn.onclick = () => {
+      launcherCard.style.display = launcherCard.style.display === "none" ? "block" : "none";
+    };
+    document.body.append(toggleBtn);
+
+    sidebar.style.display = "none";
   }
 
   waitForSidebar();
