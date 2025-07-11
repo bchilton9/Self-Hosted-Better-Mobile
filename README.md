@@ -44,7 +44,7 @@ In Organizr:
 ```
     (function(){
       const script = document.createElement(‘script’);
-      script.src = “https://moble.chilsoft.com/organizr/mobile.js”;
+      script.src = “https://mobile.chilsoft.com/organizr/mobile.js”;
       script.type = “text/javascript”;
       script.onload = () => console.log(“✅ mobile.js loaded dynamically”);
       document.head.appendChild(script);
