@@ -1,6 +1,6 @@
-// version: 4 🐳
+// version: 8 📱
 
-console.log("📱 mobile.js loaded!");
+console.log("📱 mobile.js v8 loaded!");
 
 if (window.innerWidth < 768) {
   console.log("📱 Mobile view detected");
@@ -23,116 +23,127 @@ if (window.innerWidth < 768) {
   function buildLauncher(sidebar) {
     const groups = [];
     let currentCat = "Uncategorized";
-    sidebar.querySelectorAll("*").forEach(el => {
-      if (el.matches("li.nav-small-cap, .nav-small-cap")) {
-        const text = el.textContent.trim();
-        if (text) currentCat = text;
-      }
-      else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
-        groups.push({ cat: currentCat, linkEl: el });
+
+    sidebar.querySelectorAll("li, a.waves-effect").forEach(el => {
+      if (el.classList.contains("nav-small-cap")) {
+        const title = el.textContent.trim();
+        if (title) currentCat = title;
+      } else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
+        groups.push({ cat: currentCat, el });
       }
     });
 
-    const launcherCard = document.createElement("div");
-    launcherCard.id = "mobile-launcher";
-    Object.assign(launcherCard.style, {
-      position: "fixed", top: "0", left: "0", width: "100%",
-      height: "100%", background: "rgba(0,0,0,0.95)",
-      zIndex: "9999", overflowY: "auto", padding: "20px",
-      display: "none", fontFamily: "sans-serif"
+    const launcher = document.createElement("div");
+    launcher.id = "mobile-launcher";
+    Object.assign(launcher.style, {
+      position: "fixed", top: 0, left: 0, width: "100%",
+      height: "100%", background: "#000", overflowY: "auto",
+      zIndex: 9999, padding: "20px", display: "none",
+      fontFamily: "sans-serif"
     });
 
-    // Group under categories in order found
     const catOrder = [...new Set(groups.map(g => g.cat))];
-    catOrder.forEach(catName => {
-      const items = groups.filter(g => g.cat === catName).map(g => g.linkEl);
-      if (!items.length) return;
 
-      const group = document.createElement("div");
-      Object.assign(group.style, {
-        border: "1px solid #444", borderRadius: "10px",
-        marginBottom: "20px", padding: "10px", background: "#111"
+    catOrder.forEach(cat => {
+      const container = document.createElement("div");
+      container.className = "launcher-category";
+      Object.assign(container.style, {
+        marginBottom: "20px", background: "#111",
+        borderRadius: "10px", padding: "10px", border: "1px solid #333"
       });
 
       const header = document.createElement("div");
-      Object.assign(header.style, {
-        display: "flex", alignItems: "center", cursor: "pointer",
-        marginBottom: "10px"
-      });
-      const toggleIcon = document.createElement("span");
-      toggleIcon.textContent = "▾";
-      toggleIcon.style.marginRight = "10px";
+      header.style.display = "flex";
+      header.style.alignItems = "center";
+      header.style.cursor = "pointer";
+      header.style.marginBottom = "10px";
+
+      const toggle = document.createElement("span");
+      toggle.textContent = "▾";
+      toggle.style.marginRight = "8px";
+      toggle.style.fontSize = "18px";
+
       const title = document.createElement("h3");
-      title.textContent = catName;
-      Object.assign(title.style, { margin: 0, fontSize: "18px", color: "#fff" });
-      header.append(toggleIcon, title);
-      group.append(header);
-
-      const iconGrid = document.createElement("div");
-      Object.assign(iconGrid.style, {
-        display: "grid", gridTemplateColumns: "repeat(3,1fr)",
-        gap: "16px"
+      title.textContent = cat;
+      Object.assign(title.style, {
+        margin: 0, color: "#fff", fontSize: "18px"
       });
 
-      items.forEach(link => {
-        const label = link.querySelector("span.sidebar-tabName")?.textContent.trim() || link.textContent.trim();
-        const iconSrc = link.querySelector("img")?.src;
-        const iconWrap = document.createElement("div");
-        Object.assign(iconWrap.style, {
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          background: "#222", borderRadius: "20px",
-          padding: "10px", cursor: "pointer"
+      const grid = document.createElement("div");
+      grid.className = "icon-grid";
+      Object.assign(grid.style, {
+        display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+        gap: "14px"
+      });
+
+      groups.filter(g => g.cat === cat).forEach(({ el }) => {
+        const label = el.querySelector("span.sidebar-tabName")?.textContent.trim() || el.textContent.trim();
+        const icon = el.querySelector("img")?.src;
+
+        const wrapper = document.createElement("div");
+        Object.assign(wrapper.style, {
+          display: "flex", flexDirection: "column", alignItems: "center",
+          justifyContent: "center", background: "#222", borderRadius: "16px",
+          padding: "10px", textAlign: "center", color: "#fff", cursor: "pointer"
         });
 
-        const img = document.createElement("img");
-        img.src = iconSrc || "";
-        Object.assign(img.style, { width: "48px", height: "48px", marginBottom: "6px", borderRadius: "12px" });
-        img.onerror = () => {
-          img.remove();
+        if (icon) {
+          const img = document.createElement("img");
+          img.src = icon;
+          Object.assign(img.style, {
+            width: "48px", height: "48px", marginBottom: "6px", borderRadius: "10px"
+          });
+          wrapper.appendChild(img);
+        } else {
           const fallback = document.createElement("div");
           fallback.textContent = label.charAt(0);
-          Object.assign(fallback.style, { fontSize: "28px", marginBottom: "4px" });
-          iconWrap.prepend(fallback);
-        };
-        iconWrap.append(img);
+          Object.assign(fallback.style, {
+            width: "48px", height: "48px", background: "#333",
+            color: "#fff", fontSize: "20px", borderRadius: "10px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            marginBottom: "6px"
+          });
+          wrapper.appendChild(fallback);
+        }
 
-        const text = document.createElement("div");
-        text.textContent = label;
-        Object.assign(text.style, { color: "#fff", fontSize: "12px", textAlign: "center" });
-        iconWrap.append(text);
+        const name = document.createElement("div");
+        name.textContent = label;
+        name.style.fontSize = "12px";
+        wrapper.appendChild(name);
 
-        iconWrap.onclick = () => {
-          launcherCard.style.display = "none";
-          link.click();
+        wrapper.onclick = () => {
+          launcher.style.display = "none";
+          el.click();
         };
-        iconGrid.append(iconWrap);
+
+        grid.appendChild(wrapper);
       });
 
       header.onclick = () => {
-        const visible = iconGrid.style.display !== "none";
-        iconGrid.style.display = visible ? "none" : "grid";
-        toggleIcon.textContent = visible ? "▸" : "▾";
+        const visible = grid.style.display !== "none";
+        grid.style.display = visible ? "none" : "grid";
+        toggle.textContent = visible ? "▸" : "▾";
       };
 
-      group.append(iconGrid);
-      launcherCard.append(group);
+      header.append(toggle, title);
+      container.append(header, grid);
+      launcher.appendChild(container);
     });
 
-    document.body.append(launcherCard);
+    document.body.appendChild(launcher);
 
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "☰";
     Object.assign(toggleBtn.style, {
-      position: "fixed", top: "10px", left: "10px",
-      zIndex: "10000", background: "#111",
-      color: "#fff", border: "none", borderRadius: "6px",
-      padding: "6px 12px", fontSize: "20px", cursor: "pointer"
+      position: "fixed", top: "10px", left: "10px", zIndex: "10000",
+      background: "#111", color: "#fff", border: "none",
+      borderRadius: "6px", padding: "6px 12px", fontSize: "20px",
+      cursor: "pointer"
     });
     toggleBtn.onclick = () => {
-      launcherCard.style.display = launcherCard.style.display === "none" ? "block" : "none";
+      launcher.style.display = launcher.style.display === "none" ? "block" : "none";
     };
-    document.body.append(toggleBtn);
+    document.body.appendChild(toggleBtn);
 
     sidebar.style.display = "none";
   }
