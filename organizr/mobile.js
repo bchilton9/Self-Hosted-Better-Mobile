@@ -1,55 +1,44 @@
-// version: 9 📱
+// version: 9 🐳
 
 console.log("📱 mobile.js loaded!");
 
-if (window.innerWidth < 768) {
+if (window.innerWidth < 768 || screen.width < 768) {
   console.log("📱 Mobile view detected");
 
-  const waitForSidebar = (retries = 30) => {
-    const sidebar = document.querySelector("aside, .side-menu, #side-menu");
-    if (!sidebar && retries > 0) {
-      console.warn("⏳ Sidebar not found, retrying...");
-      setTimeout(() => waitForSidebar(retries - 1), 500);
+  const waitForTabs = (retries = 30) => {
+    const groups = document.querySelectorAll("li.allGroupsList[data-group-name]");
+    if (!groups.length && retries > 0) {
+      console.warn("⏳ Sidebar groups not found, retrying...");
+      setTimeout(() => waitForTabs(retries - 1), 500);
       return;
     }
-    if (!sidebar) {
-      console.error("❌ Gave up waiting for sidebar.");
+    if (!groups.length) {
+      console.error("❌ Gave up waiting for tab groups.");
       return;
     }
-    console.log("✅ Sidebar found! Extracting tabs and categories...");
-    buildLauncher(sidebar);
+    console.log("✅ Tab groups found!");
+    buildLauncher(groups);
   };
 
-  function buildLauncher(sidebar) {
-    const groups = [];
-    let currentCat = "Uncategorized";
-    sidebar.querySelectorAll("*").forEach(el => {
-      if (el.matches("li.nav-small-cap, .nav-small-cap")) {
-        const text = el.textContent.trim();
-        if (text) currentCat = text;
-      } else if (el.matches('a.waves-effect[onclick^="tabActions"]')) {
-        groups.push({ cat: currentCat, linkEl: el });
-      }
-    });
-
+  function buildLauncher(groupEls) {
     const launcherCard = document.createElement("div");
     launcherCard.id = "mobile-launcher";
     Object.assign(launcherCard.style, {
       position: "fixed", top: "0", left: "0", width: "100%",
-      height: "100%", background: "rgba(0,0,0,0.6)",  // Transparent background
+      height: "100%", background: "rgba(0,0,0,0.85)",
       zIndex: "9999", overflowY: "auto", padding: "20px",
-      display: "none", fontFamily: "sans-serif", backdropFilter: "blur(4px)"
+      display: "none", fontFamily: "sans-serif"
     });
 
-    const catOrder = [...new Set(groups.map(g => g.cat))];
-    catOrder.forEach(catName => {
-      const items = groups.filter(g => g.cat === catName).map(g => g.linkEl);
-      if (!items.length) return;
+    groupEls.forEach(groupEl => {
+      const catName = groupEl.dataset.groupName?.trim() || "Uncategorized";
+      const tabs = groupEl.querySelectorAll("ul li.allTabsList");
+      if (!tabs.length) return;
 
-      const group = document.createElement("div");
-      Object.assign(group.style, {
+      const section = document.createElement("div");
+      Object.assign(section.style, {
         border: "1px solid #444", borderRadius: "12px",
-        marginBottom: "24px", padding: "12px", background: "#111"
+        marginBottom: "20px", padding: "10px", background: "#111"
       });
 
       const header = document.createElement("div");
@@ -57,47 +46,41 @@ if (window.innerWidth < 768) {
         display: "flex", alignItems: "center", cursor: "pointer",
         marginBottom: "10px"
       });
-
       const toggleIcon = document.createElement("span");
       toggleIcon.textContent = "▾";
-      Object.assign(toggleIcon.style, {
-        marginRight: "10px", fontSize: "18px", color: "#fff"
-      });
-
+      toggleIcon.style.marginRight = "10px";
       const title = document.createElement("h3");
       title.textContent = catName;
-      Object.assign(title.style, {
-        margin: 0, fontSize: "18px", color: "#fff"
-      });
-
+      Object.assign(title.style, { margin: 0, fontSize: "18px", color: "#fff" });
       header.append(toggleIcon, title);
-      group.append(header);
+      section.append(header);
 
       const iconGrid = document.createElement("div");
+      iconGrid.className = "icon-grid";
       Object.assign(iconGrid.style, {
         display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "18px",
-        paddingTop: "10px"
+        gridTemplateColumns: window.innerWidth > window.innerHeight ? "repeat(6, 1fr)" : "repeat(3, 1fr)",
+        gap: "16px"
       });
 
-      items.forEach(link => {
-        const label = link.querySelector("span.sidebar-tabName")?.textContent.trim() || link.textContent.trim();
-        const iconSrc = link.querySelector("img")?.src;
+      tabs.forEach(tab => {
+        const link = tab.querySelector("a.waves-effect");
+        const label = link?.querySelector("span.sidebar-tabName")?.textContent.trim()
+          || link?.innerText?.trim()
+          || "App";
+        const iconSrc = link?.querySelector("img")?.src;
 
         const iconWrap = document.createElement("div");
         Object.assign(iconWrap.style, {
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          background: "#222", borderRadius: "16px",
-          width: "90px", height: "90px",
-          textAlign: "center", padding: "10px", cursor: "pointer"
+          display: "flex", flexDirection: "column", alignItems: "center",
+          justifyContent: "center", background: "#222", borderRadius: "16px",
+          padding: "12px", cursor: "pointer", aspectRatio: "1 / 1"
         });
 
         const img = document.createElement("img");
         img.src = iconSrc || "";
         Object.assign(img.style, {
-          width: "36px", height: "36px", marginBottom: "6px", borderRadius: "8px"
+          width: "48px", height: "48px", marginBottom: "6px", borderRadius: "10px"
         });
 
         img.onerror = () => {
@@ -113,9 +96,8 @@ if (window.innerWidth < 768) {
         const text = document.createElement("div");
         text.textContent = label;
         Object.assign(text.style, {
-          fontSize: "12px", color: "#fff", lineHeight: "1.1em"
+          color: "#fff", fontSize: "12px", textAlign: "center", wordBreak: "break-word"
         });
-
         iconWrap.appendChild(text);
 
         iconWrap.onclick = () => {
@@ -132,8 +114,8 @@ if (window.innerWidth < 768) {
         toggleIcon.textContent = isVisible ? "▸" : "▾";
       };
 
-      group.appendChild(iconGrid);
-      launcherCard.appendChild(group);
+      section.appendChild(iconGrid);
+      launcherCard.appendChild(section);
     });
 
     document.body.appendChild(launcherCard);
@@ -142,17 +124,19 @@ if (window.innerWidth < 768) {
     toggleBtn.textContent = "☰";
     Object.assign(toggleBtn.style, {
       position: "fixed", top: "10px", left: "10px",
-      zIndex: "10000", background: "#111",
-      color: "#fff", border: "none", borderRadius: "6px",
-      padding: "6px 12px", fontSize: "20px", cursor: "pointer"
+      zIndex: "10000", background: "#111", color: "#fff",
+      border: "none", borderRadius: "6px", padding: "6px 12px",
+      fontSize: "20px", cursor: "pointer"
     });
     toggleBtn.onclick = () => {
       launcherCard.style.display = launcherCard.style.display === "none" ? "block" : "none";
     };
     document.body.appendChild(toggleBtn);
 
-    sidebar.style.display = "none";
+    // Hide the original sidebar
+    const side = document.querySelector("aside, .side-menu, #side-menu");
+    if (side) side.style.display = "none";
   }
 
-  waitForSidebar();
+  waitForTabs();
 }
