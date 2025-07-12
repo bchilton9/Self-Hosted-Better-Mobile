@@ -195,3 +195,8 @@ body::after {
   word-wrap: break-word;
   line-height: 1.1;
 }
+
+/* Optional: hide rogue 4-square tab from the main menu too */
+li.allTabsList i.fa-th {
+  display: none !important;
+}

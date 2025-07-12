@@ -1,5 +1,5 @@
-// version: 17.1 🐳
-console.log("📱 mobile.js v17 loaded");
+// version: 17.5
+console.log("📱 mobile.js loaded");
 
 if (window.innerWidth < 768) {
   const waitForSidebar = (retries = 30) => {
@@ -130,10 +130,6 @@ if (window.innerWidth < 768) {
         launcherCard.style.display === "none" ? "block" : "none";
     };
     document.body.append(toggleBtn);
-    
-    // Hide the original Organizr mobile toggle if present
-const builtInToggle = document.querySelector("#mobileMenuToggle, .mobile-toggle, .launcher-toggle");
-if (builtInToggle) builtInToggle.style.display = "none";
 
     sidebar.style.display = "none";
 
@@ -161,9 +157,18 @@ if (builtInToggle) builtInToggle.style.display = "none";
     });
 
     tabs.forEach(link => {
-      const label =
-        link.querySelector("span.sidebar-tabName, span.hide-menu")?.textContent.trim() ||
-        link.textContent.trim();
+  const hasValidLabel = link.querySelector("span.sidebar-tabName, span.hide-menu");
+  const faIconClass = link.querySelector("i.fa")?.className || "";
+  const isBadIcon = faIcon.includes("fa-th") || faIcon.includes("fa-grid") || faIcon === "fa";
+
+  // Skip if it's missing a valid label AND is one of the known bad icons
+  if (!hasValidLabel && isBadIcon) return;
+
+  const label =
+    hasValidLabel?.textContent.trim() ||
+    link.textContent.trim() ||
+    "App";
+        
       const iconSrc = link.querySelector("img")?.src;
       const faIcon = link.querySelector("i.fa")?.className;
 
@@ -196,7 +201,7 @@ if (builtInToggle) builtInToggle.style.display = "none";
         iconBox.append(img);
       } else {
         const icon = document.createElement("i");
-        icon.className = faIcon || "fa fa-question";
+        icon.className = faIconClass || "fa fa-question";
         Object.assign(icon.style, {
           fontSize: "32px",
           color: "#fff"
