@@ -1,4 +1,4 @@
-// version: 17.6
+// version: 17.7
 console.log("📱 mobile.js loaded");
 
 if (window.innerWidth < 768) {
@@ -157,18 +157,18 @@ if (window.innerWidth < 768) {
     });
 
     tabs.forEach(link => {
-      const hasValidLabel = link.querySelector("span.sidebar-tabName, span.hide-menu");
-      const faIconClass = link.querySelector("i.fa")?.className || "";
-      const isBadIcon = ["fa", "fa-th", "fa-th-large", "fa-grid", "fa-border-all"].some(bad =>
-        faIconClass.includes(bad)
-      );
+  const hasLabel = link.querySelector("span.sidebar-tabName, span.hide-menu");
+  const labelText = hasLabel?.textContent.trim() || link.textContent.trim();
+  const iconSrc = link.querySelector("img")?.src || "";
+  const faIconClass = link.querySelector("i.fa")?.className || "";
+  
+  const isInvisibleChar = labelText && labelText.charCodeAt(0) > 60000;
+  const isTooShort = !labelText || labelText.length < 2;
+  const isPlaceholder = !iconSrc && !faIconClass && isTooShort;
 
-      if (!hasValidLabel && isBadIcon) return;
+  if (isInvisibleChar || isPlaceholder) return; // ❌ Skip weird icon or phantom link
 
-      const label =
-        hasValidLabel?.textContent.trim() ||
-        link.textContent.trim() ||
-        "App";
+  // ✅ Continue with building icon
 
       const iconSrc = link.querySelector("img")?.src;
 
