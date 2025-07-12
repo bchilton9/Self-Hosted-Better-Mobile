@@ -1,185 +1,162 @@
-// version: 15 🐳
+// mobile.js v17
 
-console.log("📱 mobile.js loaded!");
+document.addEventListener("DOMContentLoaded", function () {
+  const launcherToggle = document.querySelector(".sidebar-toggle, .fa-bars");
+  if (!launcherToggle) return;
 
-if (window.innerWidth < 768) {
-  console.log("📱 Mobile view detected");
+  // Create overlay
+  const overlay = document.createElement("div");
+  overlay.id = "custom-mobile-launcher";
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.zIndex = "9999";
+  overlay.style.overflowY = "auto";
+  overlay.style.backgroundColor = "rgba(0,0,0,0.85)";
+  overlay.style.padding = "1rem";
+  overlay.style.display = "none";
+  document.body.appendChild(overlay);
 
-  const waitForTabs = (retries = 30) => {
-    const groups = document.querySelectorAll("li.allGroupsList");
-    if (groups.length === 0 && retries > 0) {
-      console.warn("⏳ Tabs not found, retrying...");
-      setTimeout(() => waitForTabs(retries - 1), 500);
-      return;
+  // Get tabs
+  const allTabs = document.querySelectorAll(".allTabsList");
+  const allGroups = document.querySelectorAll(".allGroupsList");
+
+  const groups = {};
+  allGroups.forEach(group => {
+    const groupName = group.dataset.groupName?.trim();
+    const tabList = group.querySelectorAll(".allTabsList");
+    if (groupName && tabList.length) {
+      groups[groupName] = Array.from(tabList);
     }
-    if (groups.length === 0) {
-      console.error("❌ Gave up waiting for tab groups.");
-      return;
-    }
-    console.log("✅ Tabs found! Building launcher...");
-    buildLauncher(groups);
-  };
+  });
 
-  function buildLauncher(groupElements) {
-    const launcherCard = document.createElement("div");
-    launcherCard.id = "mobile-launcher";
-    Object.assign(launcherCard.style, {
-      position: "fixed", top: "0", left: "0", width: "100%",
-      height: "100%", background: "rgba(0,0,0,0.9)",
-      zIndex: "9999", overflowY: "auto", padding: "10px"
-    });
+  // Handle Uncategorized
+  const categorizedTabs = new Set();
+  Object.values(groups).forEach(tabs => {
+    tabs.forEach(tab => categorizedTabs.add(tab.id));
+  });
 
-    const uncategorizedTabs = [];
-    const categorizedGroups = [];
-
-    groupElements.forEach(group => {
-      const catName = group.getAttribute("data-group-name") || "Uncategorized";
-      const links = group.querySelectorAll("li.allTabsList a[onclick^='tabActions']");
-
-      if (catName === "Uncategorized") {
-        links.forEach(link => uncategorizedTabs.push(link));
-      } else {
-        categorizedGroups.push({ name: catName, links });
-      }
-    });
-
-    // Add Uncategorized first, not collapsible
-    if (uncategorizedTabs.length) {
-      const uncategorizedGroup = document.createElement("div");
-      Object.assign(uncategorizedGroup.style, {
-        marginBottom: "20px",
-        background: "#111", borderRadius: "10px", padding: "10px"
-      });
-
-      const grid = document.createElement("div");
-      Object.assign(grid.style, {
-        display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
-        gap: "12px", justifyItems: "center"
-      });
-
-      uncategorizedTabs.forEach(link => {
-        const iconWrap = buildIcon(link);
-        grid.appendChild(iconWrap);
-      });
-
-      uncategorizedGroup.appendChild(grid);
-      launcherCard.appendChild(uncategorizedGroup);
-    }
-
-    // Add categorized sections
-    categorizedGroups.forEach(group => {
-      const wrapper = document.createElement("div");
-      Object.assign(wrapper.style, {
-        marginBottom: "20px",
-        background: "#111", borderRadius: "10px", padding: "10px"
-      });
-
-      const header = document.createElement("div");
-      header.style.display = "flex";
-      header.style.alignItems = "center";
-      header.style.cursor = "pointer";
-      header.style.marginBottom = "8px";
-
-      const toggleIcon = document.createElement("span");
-      toggleIcon.textContent = "▾";
-      toggleIcon.style.marginRight = "8px";
-
-      const title = document.createElement("div");
-      title.textContent = group.name;
-      title.style.fontSize = "16px";
-      title.style.color = "#fff";
-
-      header.appendChild(toggleIcon);
-      header.appendChild(title);
-      wrapper.appendChild(header);
-
-      const grid = document.createElement("div");
-      Object.assign(grid.style, {
-        display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
-        gap: "12px", justifyItems: "center"
-      });
-
-      group.links.forEach(link => {
-        const iconWrap = buildIcon(link);
-        grid.appendChild(iconWrap);
-      });
-
-      header.onclick = () => {
-        const visible = grid.style.display !== "none";
-        grid.style.display = visible ? "none" : "grid";
-        toggleIcon.textContent = visible ? "▸" : "▾";
-      };
-
-      wrapper.appendChild(grid);
-      launcherCard.appendChild(wrapper);
-    });
-
-    document.body.appendChild(launcherCard);
-
-    // Menu Toggle Button
-    const toggleBtn = document.createElement("button");
-    toggleBtn.textContent = "☰";
-    Object.assign(toggleBtn.style, {
-      position: "fixed", top: "10px", left: "10px",
-      zIndex: "10000", background: "#111",
-      color: "#fff", border: "none", borderRadius: "6px",
-      padding: "6px 12px", fontSize: "20px", cursor: "pointer"
-    });
-    toggleBtn.onclick = () => {
-      launcherCard.style.display = launcherCard.style.display === "none" ? "block" : "none";
-    };
-    document.body.appendChild(toggleBtn);
+  const uncategorizedTabs = Array.from(allTabs).filter(tab => !categorizedTabs.has(tab.id));
+  if (uncategorizedTabs.length > 0) {
+    groups["_uncategorized"] = uncategorizedTabs;
   }
 
-  function buildIcon(link) {
-    const label = link.querySelector("span.sidebar-tabName")?.textContent.trim()
-      || link.querySelector("span.hide-menu")?.textContent.trim()
-      || "App";
+  // Build UI
+  const container = document.createElement("div");
+  container.style.maxWidth = "900px";
+  container.style.margin = "0 auto";
 
+  const createCard = (tab) => {
     const iconBox = document.createElement("div");
-    Object.assign(iconBox.style, {
-      width: "80px", height: "80px",
-      background: "#222", borderRadius: "12px",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      position: "relative"
-    });
+    iconBox.style.width = "80px";
+    iconBox.style.height = "80px";
+    iconBox.style.margin = "10px";
+    iconBox.style.borderRadius = "12px";
+    iconBox.style.backgroundColor = "#1e1e1e";
+    iconBox.style.display = "flex";
+    iconBox.style.flexDirection = "column";
+    iconBox.style.alignItems = "center";
+    iconBox.style.justifyContent = "center";
+    iconBox.style.color = "#fff";
+    iconBox.style.fontSize = "12px";
+    iconBox.style.textAlign = "center";
 
+    const link = tab.querySelector("a");
     const img = link.querySelector("img");
-    const icon = img ? document.createElement("img") : document.createElement("i");
+    const icon = document.createElement("div");
+    icon.style.fontSize = "28px";
+    icon.style.marginBottom = "4px";
 
     if (img) {
-      icon.src = img.src;
-      Object.assign(icon.style, { width: "48px", height: "48px", objectFit: "contain" });
+      const imgEl = document.createElement("img");
+      imgEl.src = img.src;
+      imgEl.alt = "";
+      imgEl.style.width = "36px";
+      imgEl.style.height = "36px";
+      icon.appendChild(imgEl);
     } else {
-      const faClass = link.querySelector("i.fa")?.className || "fa fa-question";
-      icon.className = faClass;
-      Object.assign(icon.style, { fontSize: "32px", color: "#fff" });
+      const fa = link.querySelector("i");
+      if (fa) {
+        icon.innerHTML = `<i class="${fa.className}" style="font-size: 36px;"></i>`;
+      }
     }
 
+    const text = document.createElement("div");
+    const name = link.textContent?.trim();
+    text.textContent = name;
+    text.style.fontSize = "12px";
+
+    iconBox.onclick = () => link.click();
     iconBox.appendChild(icon);
+    iconBox.appendChild(text);
+    return iconBox;
+  };
 
-    const wrapper = document.createElement("div");
-    wrapper.style.display = "flex";
-    wrapper.style.flexDirection = "column";
-    wrapper.style.alignItems = "center";
-    wrapper.style.gap = "6px";
-    wrapper.appendChild(iconBox);
+  const createCategory = (name, tabs, collapsible = true) => {
+    const section = document.createElement("div");
+    section.style.marginBottom = "1.5rem";
+    const header = document.createElement("h3");
+    header.textContent = name !== "_uncategorized" ? name : "";
+    header.style.color = "#fff";
+    header.style.fontSize = "16px";
+    header.style.cursor = collapsible ? "pointer" : "default";
+    header.style.display = "flex";
+    header.style.alignItems = "center";
+    header.style.margin = "0 0 0.5rem 0";
 
-    const labelEl = document.createElement("div");
-    labelEl.textContent = label;
-    Object.assign(labelEl.style, {
-      color: "#fff", fontSize: "12px", textAlign: "center", maxWidth: "80px", wordWrap: "break-word"
-    });
+    let icon;
+    if (collapsible) {
+      icon = document.createElement("span");
+      icon.textContent = "▾";
+      icon.style.marginRight = "8px";
+      icon.style.transform = "rotate(0deg)";
+      header.prepend(icon);
+    }
 
-    wrapper.appendChild(labelEl);
+    const grid = document.createElement("div");
+    grid.style.display = "grid";
+    grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(100px, 1fr))";
+    grid.style.gap = "8px";
 
-    wrapper.onclick = () => {
-      document.getElementById("mobile-launcher").style.display = "none";
-      link.click();
-    };
+    tabs.forEach(tab => grid.appendChild(createCard(tab)));
 
-    return wrapper;
+    if (collapsible) {
+      header.addEventListener("click", () => {
+        const isHidden = grid.style.display === "none";
+        grid.style.display = isHidden ? "grid" : "none";
+        icon.style.transform = isHidden ? "rotate(0deg)" : "rotate(-90deg)";
+      });
+    }
+
+    section.appendChild(header);
+    section.appendChild(grid);
+    return section;
+  };
+
+  // Append uncategorized first
+  if (groups["_uncategorized"]) {
+    container.appendChild(createCategory("_uncategorized", groups["_uncategorized"], false));
+    delete groups["_uncategorized"];
   }
 
-  waitForTabs();
-}
+  // Append other categories
+  Object.keys(groups).forEach(group => {
+    container.appendChild(createCategory(group, groups[group], true));
+  });
+
+  overlay.appendChild(container);
+
+  launcherToggle.addEventListener("click", () => {
+    const isVisible = overlay.style.display === "block";
+    overlay.style.display = isVisible ? "none" : "block";
+  });
+
+  // Hide menu on outside click
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.style.display = "none";
+    }
+  });
+});
