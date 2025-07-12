@@ -1,4 +1,4 @@
-// version: 17.5
+// version: 17.6
 console.log("📱 mobile.js loaded");
 
 if (window.innerWidth < 768) {
@@ -157,20 +157,20 @@ if (window.innerWidth < 768) {
     });
 
     tabs.forEach(link => {
-  const hasValidLabel = link.querySelector("span.sidebar-tabName, span.hide-menu");
-  const faIconClass = link.querySelector("i.fa")?.className || "";
-  const isBadIcon = faIcon.includes("fa-th") || faIcon.includes("fa-grid") || faIcon === "fa";
+      const hasValidLabel = link.querySelector("span.sidebar-tabName, span.hide-menu");
+      const faIconClass = link.querySelector("i.fa")?.className || "";
+      const isBadIcon = ["fa", "fa-th", "fa-th-large", "fa-grid", "fa-border-all"].some(bad =>
+        faIconClass.includes(bad)
+      );
 
-  // Skip if it's missing a valid label AND is one of the known bad icons
-  if (!hasValidLabel && isBadIcon) return;
+      if (!hasValidLabel && isBadIcon) return;
 
-  const label =
-    hasValidLabel?.textContent.trim() ||
-    link.textContent.trim() ||
-    "App";
-        
+      const label =
+        hasValidLabel?.textContent.trim() ||
+        link.textContent.trim() ||
+        "App";
+
       const iconSrc = link.querySelector("img")?.src;
-      const faIcon = link.querySelector("i.fa")?.className;
 
       const wrapper = document.createElement("div");
       wrapper.style.display = "flex";
