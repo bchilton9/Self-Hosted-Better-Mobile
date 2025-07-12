@@ -1,4 +1,4 @@
-// version: 17 🐳
+// version: 17.1 🐳
 console.log("📱 mobile.js v17 loaded");
 
 if (window.innerWidth < 768) {
