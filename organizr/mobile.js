@@ -1,207 +1,173 @@
-// version: 15.1 📱
+// version: 16 🐳
 
-console.log("📱 mobile.js v15 loaded");
+console.log("📱 mobile.js loaded!");
 
 if (window.innerWidth < 768) {
   console.log("📱 Mobile view detected");
 
-  function waitForTabs(retries = 30) {
-    const tabLinks = document.querySelectorAll("li.allTabsList");
-    if (!tabLinks.length && retries > 0) {
-      console.warn("⏳ Waiting for tabs...");
-      setTimeout(() => waitForTabs(retries - 1), 300);
-      return;
+  const waitForSidebar = (retries = 30) => {
+    const groups = {};
+    const uncategorized = [];
+
+    const sidebarRoot = document.querySelectorAll(".allGroupsList");
+    if (!sidebarRoot.length && retries > 0) {
+      console.warn("⏳ Sidebar not ready, retrying...");
+      return setTimeout(() => waitForSidebar(retries - 1), 500);
     }
-    if (!tabLinks.length) {
-      console.error("❌ Tabs not found");
-      return;
-    }
+    if (!sidebarRoot.length) return console.error("❌ Sidebar failed to load.");
 
-    console.log("✅ Tabs loaded");
-    buildLauncher();
-  }
-
-  function buildLauncher() {
-    const allGroups = document.querySelectorAll("li.allGroupsList");
-    const categorized = {};
-    let uncategorized = [];
-
-    allGroups.forEach(group => {
-      const cat = group.dataset.groupName?.trim();
+    sidebarRoot.forEach(group => {
+      const cat = group.getAttribute("data-group-name")?.trim() || "Uncategorized";
       const tabs = group.querySelectorAll("li.allTabsList");
-      if (!cat || cat === "null") {
-        uncategorized = [...uncategorized, ...tabs];
-      } else {
-        if (!categorized[cat]) categorized[cat] = [];
-        categorized[cat].push(...tabs);
-      }
+      tabs.forEach(tab => {
+        const link = tab.querySelector("a.waves-effect");
+        if (cat === "Uncategorized") {
+          uncategorized.push(link);
+        } else {
+          if (!groups[cat]) groups[cat] = [];
+          groups[cat].push(link);
+        }
+      });
     });
 
+    buildLauncher(groups, uncategorized);
+  };
+
+  const buildLauncher = (groups, uncategorized) => {
     const launcher = document.createElement("div");
     launcher.id = "mobile-launcher";
     Object.assign(launcher.style, {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      background: "rgba(0,0,0,0.85)",
-      zIndex: 9999,
-      overflowY: "auto",
-      padding: "12px",
-      display: "none"
+      position: "fixed", top: "0", left: "0", width: "100%", height: "100%",
+      background: "rgba(0,0,0,0.9)", zIndex: "9999", overflowY: "auto",
+      padding: "20px", fontFamily: "sans-serif", display: "none"
     });
 
-    const createIconGrid = (tabs, collapsible = true) => {
+    const addSection = (title, items, collapsible = true) => {
       const box = document.createElement("div");
-      Object.assign(box.style, {
-        border: "1px solid #444",
-        borderRadius: "12px",
-        marginBottom: "16px",
-        padding: "12px",
-        background: "#111"
-      });
+      box.style.border = "1px solid #444";
+      box.style.borderRadius = "10px";
+      box.style.marginBottom = "20px";
+      box.style.background = "#111";
+
+      const header = document.createElement("div");
+      header.style.display = "flex";
+      header.style.alignItems = "center";
+      header.style.padding = "10px";
+      header.style.cursor = collapsible ? "pointer" : "default";
+
+      const icon = document.createElement("span");
+      icon.textContent = "▾";
+      icon.style.marginRight = "10px";
+      icon.style.display = collapsible ? "inline-block" : "none";
+
+      const label = document.createElement("h3");
+      label.textContent = title;
+      Object.assign(label.style, { margin: 0, fontSize: "16px", color: "#fff" });
+
+      header.append(icon, label);
+      box.appendChild(header);
 
       const grid = document.createElement("div");
-      grid.className = "mobile-icon-grid";
+      grid.style.display = "grid";
+      grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(90px, 1fr))";
+      grid.style.gap = "12px";
+      grid.style.padding = "10px";
 
-      Object.assign(grid.style, {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))",
-        justifyItems: "center",
-        gap: "16px"
-      });
-
-      tabs.forEach(tab => {
-        const a = tab.querySelector("a");
-        const name = a?.querySelector(".sidebar-tabName")?.textContent.trim() || "Unknown";
-        const img = a?.querySelector("img");
-        const icon = document.createElement("div");
-        Object.assign(icon.style, {
-          width: "70px",
-          height: "70px",
-          background: "#222",
-          borderRadius: "18px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "28px",
-          color: "#fff",
-          position: "relative"
-        });
-
-        if (img?.src) {
-          const image = document.createElement("img");
-          image.src = img.src;
-          Object.assign(image.style, {
-            width: "40px",
-            height: "40px",
-            objectFit: "contain"
-          });
-          icon.appendChild(image);
-        } else {
-          const faIcon = a.querySelector("i.fa");
-          if (faIcon) {
-            const clone = faIcon.cloneNode(true);
-            Object.assign(clone.style, { fontSize: "28px" });
-            icon.appendChild(clone);
-          } else {
-            icon.textContent = name.charAt(0);
-          }
-        }
+      items.forEach(link => {
+        const tabName = link.querySelector(".sidebar-tabName")?.textContent.trim() || "App";
+        const iconSrc = link.querySelector("img")?.src;
+        const faIcon = link.querySelector("i.fa");
 
         const wrapper = document.createElement("div");
-        Object.assign(wrapper.style, {
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-          gap: "6px"
-        });
+        wrapper.style.background = "#222";
+        wrapper.style.borderRadius = "16px";
+        wrapper.style.padding = "10px";
+        wrapper.style.display = "flex";
+        wrapper.style.flexDirection = "column";
+        wrapper.style.alignItems = "center";
+        wrapper.style.justifyContent = "center";
+        wrapper.style.cursor = "pointer";
+        wrapper.style.aspectRatio = "1/1";
 
-        const label = document.createElement("div");
-        label.textContent = name;
-        Object.assign(label.style, {
-          color: "#fff",
-          fontSize: "12px",
-          maxWidth: "90px",
-          wordWrap: "break-word"
-        });
+        const icon = document.createElement("div");
+        icon.style.fontSize = "28px";
+        icon.style.marginBottom = "8px";
 
-        wrapper.appendChild(icon);
-        wrapper.appendChild(label);
+        if (iconSrc) {
+          const img = document.createElement("img");
+          img.src = iconSrc;
+          img.style.width = "48px";
+          img.style.height = "48px";
+          img.style.borderRadius = "10px";
+          icon.appendChild(img);
+        } else if (faIcon) {
+          const clone = faIcon.cloneNode(true);
+          clone.style.fontSize = "36px";
+          clone.style.color = "#fff";
+          icon.appendChild(clone);
+        } else {
+          icon.textContent = tabName.charAt(0);
+          icon.style.color = "#fff";
+        }
+
+        const text = document.createElement("div");
+        text.textContent = tabName;
+        text.style.fontSize = "12px";
+        text.style.color = "#fff";
+        text.style.marginTop = "4px";
+        text.style.textAlign = "center";
+
         wrapper.onclick = () => {
           launcher.style.display = "none";
-          a.click();
+          link.click();
         };
 
+        wrapper.appendChild(icon);
+        wrapper.appendChild(text);
         grid.appendChild(wrapper);
       });
 
       if (collapsible) {
-        const title = document.createElement("h3");
-        title.textContent = tabs[0]?.closest("li.allGroupsList")?.dataset.groupName || "Category";
-        Object.assign(title.style, {
-          color: "#fff",
-          fontSize: "16px",
-          margin: "0 0 10px",
-          display: "flex",
-          alignItems: "center",
-          cursor: "pointer"
-        });
-
-        const toggle = document.createElement("span");
-        toggle.textContent = "▾";
-        toggle.style.marginRight = "8px";
-
-        title.prepend(toggle);
-        title.onclick = () => {
-          const open = grid.style.display !== "none";
-          grid.style.display = open ? "none" : "grid";
-          toggle.textContent = open ? "▸" : "▾";
+        header.onclick = () => {
+          const isHidden = grid.style.display === "none";
+          grid.style.display = isHidden ? "grid" : "none";
+          icon.textContent = isHidden ? "▾" : "▸";
         };
-
-        box.append(title, grid);
-      } else {
-        box.append(grid);
       }
 
-      return box;
+      box.appendChild(grid);
+      launcher.appendChild(box);
     };
 
-    // Add uncategorized first
+    // Uncategorized at top, static
     if (uncategorized.length) {
-      launcher.appendChild(createIconGrid(uncategorized, false));
+      addSection(" ", uncategorized, false);
     }
 
-    for (const [cat, tabs] of Object.entries(categorized)) {
-      launcher.appendChild(createIconGrid(tabs, true));
+    // Add all other categories
+    for (const [cat, items] of Object.entries(groups)) {
+      addSection(cat, items, true);
     }
 
     document.body.appendChild(launcher);
 
-    const toggleBtn = document.createElement("button");
-    toggleBtn.textContent = "☰";
-    Object.assign(toggleBtn.style, {
-      position: "fixed",
-      top: "10px",
-      left: "10px",
-      zIndex: 10000,
-      background: "#111",
-      color: "#fff",
-      border: "none",
-      borderRadius: "6px",
-      padding: "6px 12px",
-      fontSize: "20px",
-      cursor: "pointer"
+    const toggle = document.createElement("button");
+    toggle.textContent = "☰";
+    Object.assign(toggle.style, {
+      position: "fixed", top: "10px", left: "10px",
+      zIndex: "10000", background: "#111",
+      color: "#fff", border: "none", borderRadius: "6px",
+      padding: "6px 12px", fontSize: "20px", cursor: "pointer"
     });
-
-    toggleBtn.onclick = () => {
-      launcher.style.display = launcher.style.display === "none" ? "block" : "none";
+    toggle.onclick = () => {
+      launcher.style.display = launcher.style.display === "block" ? "none" : "block";
     };
 
-    document.body.appendChild(toggleBtn);
-  }
+    document.body.appendChild(toggle);
 
-  waitForTabs();
+    const sidebar = document.querySelector("aside, .side-menu, #side-menu");
+    if (sidebar) sidebar.style.display = "none";
+  };
+
+  waitForSidebar();
 }
