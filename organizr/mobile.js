@@ -130,6 +130,10 @@ if (window.innerWidth < 768) {
         launcherCard.style.display === "none" ? "block" : "none";
     };
     document.body.append(toggleBtn);
+    
+    // Hide the original Organizr mobile toggle if present
+const builtInToggle = document.querySelector("#mobileMenuToggle, .mobile-toggle, .launcher-toggle");
+if (builtInToggle) builtInToggle.style.display = "none";
 
     sidebar.style.display = "none";
 
