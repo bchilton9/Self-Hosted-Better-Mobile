@@ -1,4 +1,4 @@
-// version: 17.7
+// version: 17.8
 console.log("📱 mobile.js loaded");
 
 if (window.innerWidth < 768) {
@@ -48,7 +48,6 @@ if (window.innerWidth < 768) {
       display: "none"
     });
 
-    // Add Uncategorized group first (static)
     if (groups["Uncategorized"]) {
       const group = document.createElement("div");
       Object.assign(group.style, {
@@ -58,14 +57,12 @@ if (window.innerWidth < 768) {
         padding: "10px",
         background: "#111"
       });
-
       const iconGrid = createIconGrid(groups["Uncategorized"]);
       group.append(iconGrid);
       launcherCard.append(group);
       delete groups["Uncategorized"];
     }
 
-    // Add all other categories (collapsible)
     Object.entries(groups).forEach(([catName, tabs]) => {
       const group = document.createElement("div");
       Object.assign(group.style, {
@@ -83,9 +80,11 @@ if (window.innerWidth < 768) {
         cursor: "pointer",
         marginBottom: "10px"
       });
+
       const toggleIcon = document.createElement("span");
       toggleIcon.textContent = "▾";
       toggleIcon.style.marginRight = "10px";
+
       const title = document.createElement("h3");
       title.textContent = catName;
       Object.assign(title.style, {
@@ -93,6 +92,7 @@ if (window.innerWidth < 768) {
         fontSize: "18px",
         color: "#fff"
       });
+
       header.append(toggleIcon, title);
       group.append(header);
 
@@ -125,6 +125,7 @@ if (window.innerWidth < 768) {
       fontSize: "20px",
       cursor: "pointer"
     });
+
     toggleBtn.onclick = () => {
       launcherCard.style.display =
         launcherCard.style.display === "none" ? "block" : "none";
@@ -157,20 +158,17 @@ if (window.innerWidth < 768) {
     });
 
     tabs.forEach(link => {
-  const hasLabel = link.querySelector("span.sidebar-tabName, span.hide-menu");
-  const labelText = hasLabel?.textContent.trim() || link.textContent.trim();
-  const iconSrc = link.querySelector("img")?.src || "";
-  const faIconClass = link.querySelector("i.fa")?.className || "";
-  
-  const isInvisibleChar = labelText && labelText.charCodeAt(0) > 60000;
-  const isTooShort = !labelText || labelText.length < 2;
-  const isPlaceholder = !iconSrc && !faIconClass && isTooShort;
+      const hasLabel = link.querySelector("span.sidebar-tabName, span.hide-menu");
+      const labelText = hasLabel?.textContent.trim() || link.textContent.trim();
+      const iconSrc = link.querySelector("img")?.src || "";
+      const faIconClass = link.querySelector("i.fa")?.className || "";
 
-  if (isInvisibleChar || isPlaceholder) return; // ❌ Skip weird icon or phantom link
+      const isBadChar = labelText && labelText.charCodeAt(0) > 60000;
+      const isPlaceholder = !iconSrc && !faIconClass && (!labelText || labelText.length < 2);
 
-  // ✅ Continue with building icon
+      if (isBadChar || isPlaceholder) return;
 
-      const iconSrc = link.querySelector("img")?.src;
+      const label = labelText || "App";
 
       const wrapper = document.createElement("div");
       wrapper.style.display = "flex";
